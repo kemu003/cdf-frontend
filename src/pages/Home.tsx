@@ -68,9 +68,7 @@ export default function Home() {
   ];
 
   const wards = [
-    'Chebwai', 'Cheborge', 'Chemosot', 'Kapkatet',
-    'Kibugat', 'Kimulot', 'Kipsonoi', 'Kisiara',
-    'Litein', 'Mogogosiek', 'Sotik'
+    'Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'kongasis'
   ];
 
   return (

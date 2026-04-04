@@ -62,8 +62,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { icon: <DollarSign size={20} />, label: 'Budget', to: '/budget' },
     { icon: <FileText size={20} />, label: 'Applications', to: '/applications' },
     { icon: <BarChart3 size={20} />, label: 'Reports', to: '/reports' },
-    { icon: <Building size={20} />, label: 'Projects', to: '/projects' },
-    { icon: <Calendar size={20} />, label: 'Calendar', to: '/calendar' },
   ];
 
   const adminItems = [
@@ -76,7 +74,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Top Navigation */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8">

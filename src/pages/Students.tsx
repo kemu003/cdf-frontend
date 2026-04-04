@@ -389,8 +389,8 @@ const StudentCard: React.FC<{
 };
 
 export default function Students() {
-  const { user } = useAuth();
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const { user, isAdmin, isCommittee } = useAuth();
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedWard, setSelectedWard] = useState<string>('all');
@@ -402,6 +402,7 @@ export default function Students() {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
   const [expandedYear, setExpandedYear] = useState<string | null>(null);
   const [yearSummaryData, setYearSummaryData] = useState<YearData[]>([]);
   const [mpSponsorshipSummary, setMpSponsorshipSummary] = useState<MPSponsorshipSummary>({
@@ -941,6 +942,68 @@ export default function Students() {
     }
   };
 
+  const handleBulkApprove = async () => {
+    if (selectedStudents.size === 0) return;
+    if (!window.confirm(`Are you sure you want to approve all ${selectedStudents.size} selected students?`)) return;
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const id of selectedStudents) {
+      try {
+        await api.put(`/students/${id}/approve/`);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to approve student ${id}:`, error);
+        failCount++;
+      }
+    }
+
+    fetchStudents();
+    setSelectedStudents(new Set());
+    alert(`Bulk approval complete!\nSuccess: ${successCount}\nFailed: ${failCount}`);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedStudents.size === 0) return;
+    if (!window.confirm(`Are you sure you want to delete all ${selectedStudents.size} selected students? This cannot be undone.`)) return;
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const id of selectedStudents) {
+      try {
+        await studentsAPI.delete(id);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to delete student ${id}:`, error);
+        failCount++;
+      }
+    }
+
+    fetchStudents();
+    setSelectedStudents(new Set());
+    alert(`Bulk deletion complete!\nSuccess: ${successCount}\nFailed: ${failCount}`);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedStudents.size === filteredStudents.length) {
+      setSelectedStudents(new Set());
+    } else {
+      setSelectedStudents(new Set(filteredStudents.map(s => s.id)));
+    }
+  };
+
+  const handleSelect = (id: number) => {
+    const newSelected = new Set(selectedStudents);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedStudents(newSelected);
+  };
+
   const handleRefresh = () => {
     fetchStudents();
   };
@@ -1042,7 +1105,7 @@ export default function Students() {
     return { ward, count, mpCount, totalAmount };
   });
 
-  if (!user || (user.role !== 'admin' && user.role !== 'committee')) {
+  if (!user || (!isAdmin && !isCommittee && user.role !== 'admin' && user.role !== 'committee')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -1088,6 +1151,36 @@ export default function Students() {
           </button>
         </div>
       </div>
+
+      {/* Bulk Actions Bar */}
+      {selectedStudents.size > 0 && (
+        <div className="bg-blue-600 text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-fadeIn sticky top-4 z-50">
+          <div className="flex items-center space-x-4">
+            <span className="font-bold">{selectedStudents.size} students selected</span>
+            <div className="h-4 w-px bg-blue-400"></div>
+            <button 
+              onClick={handleBulkApprove}
+              className="flex items-center hover:text-blue-200 transition-colors"
+            >
+              <CheckCircle size={18} className="mr-1" />
+              Approve Selected
+            </button>
+            <button 
+              onClick={handleBulkDelete}
+              className="flex items-center hover:text-red-200 transition-colors"
+            >
+              <Trash2 size={18} className="mr-1" />
+              Delete Selected
+            </button>
+          </div>
+          <button 
+            onClick={() => setSelectedStudents(new Set())}
+            className="text-sm bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded-lg"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       {/* MP Sponsorship Summary Card */}
       {mpSponsorshipSummary.totalMpSponsored > 0 && (
@@ -1396,7 +1489,17 @@ export default function Students() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                        checked={selectedStudents.size === filteredStudents.length && filteredStudents.length > 0}
+                        onChange={handleSelectAll}
+                      />
+                      Student
+                    </div>
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution & Course</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ward</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
@@ -1408,9 +1511,15 @@ export default function Students() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredStudents.map((student) => (
-                  <tr key={student.id} className={`hover:bg-gray-50 ${student.sponsorship_source === 'mp' ? 'bg-yellow-50/50' : ''}`}>
+                  <tr key={student.id} className={`hover:bg-gray-50 ${student.sponsorship_source === 'mp' ? 'bg-yellow-50/50' : ''} ${selectedStudents.has(student.id) ? 'bg-blue-50/50' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-4"
+                          checked={selectedStudents.has(student.id)}
+                          onChange={() => handleSelect(student.id)}
+                        />
                         <div className={`h-10 w-10 ${student.sponsorship_source === 'mp' ? 'bg-yellow-100' : student.sponsorship_source === 'other' ? 'bg-purple-100' : 'bg-blue-100'} rounded-full flex items-center justify-center`}>
                           {student.sponsorship_source === 'mp' ? (
                             <Crown size={16} className="text-yellow-600" />
@@ -1503,7 +1612,7 @@ export default function Students() {
                         >
                           <Edit size={18} />
                         </button>
-                        {student.status === 'pending' && user.role === 'admin' && (
+                        {(isAdmin || isCommittee || user.role === 'admin' || user.role === 'committee') && student.status === 'pending' && (
                           <>
                             <button 
                               onClick={() => handleApprove(student.id)}

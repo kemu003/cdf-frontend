@@ -38,7 +38,7 @@ import {
   User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { api, studentsAPI } from '../services/api';
+import { api, studentsAPI, bursariesAPI } from '../services/api';
 
 interface Student {
   id: number;
@@ -46,7 +46,8 @@ interface Student {
   admissionNumber: string;
   institution: string;
   course: string;
-  ward: string;
+  ward: string | number;
+  ward_name?: string;
   status: 'approved' | 'pending' | 'rejected' | 'disbursed';
   allocatedAmount: string;
   contact: string;
@@ -240,7 +241,7 @@ const StudentRow: React.FC<{
               </div>
               <div className="flex items-center text-xs">
                 <Building className="w-3 h-3 text-gray-400 mr-1" />
-                <span className="text-gray-600">{student.ward}</span>
+                <span className="text-gray-600">{student.ward_name || student.ward}</span>
                 {student.sponsor_name && (
                   <>
                     <span className="mx-1">•</span>
@@ -377,13 +378,14 @@ export default function Students() {
   const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
   const [smsBalance, setSmsBalance] = useState<string>('Loading...');
   const [smsProvider, setSmsProvider] = useState<string>('Checking...');
+  const [wardsList, setWardsList] = useState<any[]>([]);
   const [mpSponsorshipSummary, setMpSponsorshipSummary] = useState<MPSponsorshipSummary>({
     totalMpSponsored: 0,
     totalMpAmount: 0,
     mpStudentsByWard: {}
   });
 
-  const wards = ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'Kongasis'];
+  const wards = ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'kongasis'];
   const currentYear = new Date().getFullYear().toString();
 
   const educationLevels = [
@@ -394,9 +396,18 @@ export default function Students() {
 
   const sponsorshipSources = [
     { value: 'cdf', label: 'CDF Fund' },
-    { value: 'mp', label: 'Member of Parliament' },
+    { value: 'mp', label: 'Member of Parliament (Mheshimiwa)' },
     { value: 'other', label: 'Other Sponsor' }
   ];
+
+  const fetchWards = async () => {
+    try {
+      const response = await api.get('/bursaries/wards/');
+      setWardsList(response.data.results || response.data);
+    } catch (error) {
+      console.error('Failed to fetch wards:', error);
+    }
+  };
 
   const formatPhoneNumber = (phone: string): string => {
     if (!phone) return '';
@@ -527,11 +538,13 @@ export default function Students() {
   useEffect(() => {
     fetchStudents();
     fetchSmsBalance();
+    fetchWards();
   }, []);
 
   const [formData, setFormData] = useState({
     name: '',
     registration_no: '',
+    national_id: '',
     phone: '',
     guardian_phone: '',
     institution: '',
@@ -552,6 +565,7 @@ export default function Students() {
     setFormData({
       name: student.name,
       registration_no: student.registration_no,
+      national_id: (student as any).national_id || '',
       phone: student.phone || '',
       guardian_phone: student.guardian_phone || '',
       institution: student.institution,
@@ -690,23 +704,26 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       return;
     }
 
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      alert("Please enter a valid allocation amount.");
+    const courseValue = formData.education_level === 'high_school' ? '' : formData.course;
+    
+    // Find the ward ID from the name
+    const wardObj = wardsList.find(w => w.name === formData.ward);
+    if (!wardObj) {
+      alert(`Invalid ward: ${formData.ward}. Please select a ward from the list.`);
       return;
     }
-
-    const courseValue = formData.education_level === 'high_school' ? '' : formData.course;
 
     const studentData: any = {
       name: formData.name.trim(),
       registration_no: formData.registration_no.trim(),
+      national_id: formData.national_id.trim() || null,
       phone: formData.phone ? formatPhoneNumber(formData.phone) : null,
       guardian_phone: formData.guardian_phone ? formatPhoneNumber(formData.guardian_phone) : null,
       institution: formData.institution.trim(),
       course: courseValue.trim(),
       year: formData.year,
-      ward: formData.ward,
-      amount: parseFloat(formData.amount),
+      ward: wardObj.id, // Use the ID here!
+      amount: parseFloat(formData.amount) || 0,
       education_level: formData.education_level,
       sponsorship_source: formData.sponsorship_source,
       status: 'pending',
@@ -727,33 +744,18 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
     try {
       if (editingStudent) {
         const response = await studentsAPI.update(editingStudent.id, studentData);
+        // Map response back to the local Student interface
         const updatedStudent: Student = {
-          id: response.data.id,
-          name: response.data.name,
+          ...editingStudent,
+          ...response.data,
           admissionNumber: response.data.registration_no,
-          registration_no: response.data.registration_no,
-          institution: response.data.institution,
-          course: response.data.course || '',
-          ward: response.data.ward,
-          status: response.data.status,
           allocatedAmount: `Ksh ${parseFloat(response.data.amount || 0).toLocaleString()}`,
           contact: response.data.phone || response.data.guardian_phone || '',
-          phone: response.data.phone,
-          guardian_phone: response.data.guardian_phone,
-          year: response.data.year,
-          date_applied: response.data.date_applied,
-          date_processed: response.data.date_processed,
-          education_level: response.data.education_level || 'high_school',
-          sms_status: response.data.sms_status || 'not_sent',
           amount: parseFloat(response.data.amount || 0),
-          sponsorship_source: response.data.sponsorship_source || 'cdf',
-          sponsor_name: response.data.sponsor_name,
-          sponsorship_date: response.data.sponsorship_date,
           sponsorship_amount: response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0,
-          sponsor_details: response.data.sponsor_details,
-          rejection_reason: response.data.rejection_reason,
           total_allocation: response.data.total_allocation || 
-            parseFloat(response.data.amount || 0) + (response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0)
+            parseFloat(response.data.amount || 0) + (response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0),
+          ward: wardObj.name // Store name in local state for display
         };
         
         setStudents(prev => prev.map(s => 
@@ -763,13 +765,14 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       } else {
         const response = await studentsAPI.create(studentData);
         const newStudent: Student = {
+          ...response.data,
           id: response.data.id,
           name: response.data.name,
           admissionNumber: response.data.registration_no,
           registration_no: response.data.registration_no,
           institution: response.data.institution,
           course: response.data.course || '',
-          ward: response.data.ward,
+          ward: wardObj.name, // Store name in local state for display
           status: response.data.status,
           allocatedAmount: `Ksh ${parseFloat(response.data.amount || 0).toLocaleString()}`,
           contact: response.data.phone || response.data.guardian_phone || '',
@@ -795,7 +798,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       }
       
       setFormData({
-        name: '', registration_no: '', phone: '', guardian_phone: '', institution: '',
+        name: '', registration_no: '', national_id: '', phone: '', guardian_phone: '', institution: '',
         course: '', year: '', ward: '', amount: '', education_level: 'high_school',
         sponsorship_source: 'cdf', sponsor_name: '', sponsorship_date: '',
         sponsorship_amount: '', sponsor_details: ''
@@ -805,7 +808,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       
     } catch (error: any) {
       console.error("Error saving student:", error);
-      alert(error.response?.data?.detail || 'Failed to save student. Please try again.');
+      alert(`Error saving student: ${error.message || 'An unknown error occurred'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -923,6 +926,67 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
     setSelectedStudents(newSelected);
   };
 
+  const handleBulkApprove = async (ids?: number[]) => {
+    const studentIds = ids || Array.from(selectedStudents);
+    if (studentIds.length === 0) {
+      alert('No students selected.');
+      return;
+    }
+    if (!window.confirm(`Approve ${studentIds.length} student(s)?`)) return;
+    try {
+      const response = await studentsAPI.bulkApprove(studentIds);
+      const data = response.data;
+      alert(`✅ ${data.message}`);
+      setSelectedStudents(new Set());
+      fetchStudents();
+    } catch (error: any) {
+      console.error('Bulk approve error:', error);
+      alert(`Failed to bulk approve: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const handleApproveAllPending = () => {
+    const pendingIds = filteredStudents
+      .filter(s => s.status === 'pending')
+      .map(s => s.id);
+    if (pendingIds.length === 0) {
+      alert('No pending students to approve.');
+      return;
+    }
+    handleBulkApprove(pendingIds);
+  };
+
+  const handleBulkSendSMS = async (ids?: number[]) => {
+    const studentIds = ids || Array.from(selectedStudents);
+    if (studentIds.length === 0) {
+      alert('No students selected.');
+      return;
+    }
+    if (!window.confirm(`Send SMS to ${studentIds.length} student(s)?`)) return;
+    try {
+      const response = await studentsAPI.bulkSendSMS(studentIds);
+      const data = response.data;
+      alert(`✅ ${data.message}`);
+      setSelectedStudents(new Set());
+      fetchStudents();
+      fetchSmsBalance();
+    } catch (error: any) {
+      console.error('Bulk SMS error:', error);
+      alert(`Failed to send SMS: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const handleSendAllSMS = () => {
+    const approvedIds = filteredStudents
+      .filter(s => (s.status === 'approved' || s.status === 'disbursed') && s.sms_status !== 'sent')
+      .map(s => s.id);
+    if (approvedIds.length === 0) {
+      alert('No approved students with unsent SMS.');
+      return;
+    }
+    handleBulkSendSMS(approvedIds);
+  };
+
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
       const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -960,6 +1024,8 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
   const smsFailed = filteredStudents.filter(s => s.sms_status === 'failed').length;
   const smsPending = filteredStudents.filter(s => s.sms_status === 'not_sent').length;
 
+  const { isAdmin, isCommittee } = useAuth();
+
   const studentStats = [
     {
       title: 'Total Students',
@@ -987,7 +1053,18 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
     }
   ];
 
-  if (!user || (user.role !== 'admin' && user.role !== 'committee')) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading student data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (!isAdmin && !isCommittee && user.role !== 'admin' && user.role !== 'committee')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -1026,6 +1103,22 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
           >
             <Download size={18} className="mr-2" />
             Export
+          </button>
+          <button
+            onClick={handleApproveAllPending}
+            disabled={loading || filteredStudents.filter(s => s.status === 'pending').length === 0}
+            className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+          >
+            <CheckCircle size={18} className="mr-2" />
+            Approve All Pending
+          </button>
+          <button
+            onClick={handleSendAllSMS}
+            disabled={loading || filteredStudents.filter(s => (s.status === 'approved' || s.status === 'disbursed') && s.sms_status !== 'sent').length === 0}
+            className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+          >
+            <Send size={18} className="mr-2" />
+            Send All SMS
           </button>
           <button 
             onClick={() => setShowForm(true)}
@@ -1124,10 +1217,16 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
           </div>
           {selectedStudents.size > 0 && (
             <div className="flex items-center space-x-2">
-              <button className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+              <button
+                onClick={() => handleBulkApprove()}
+                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+              >
                 Bulk Approve
               </button>
-              <button className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200">
+              <button
+                onClick={() => handleBulkSendSMS()}
+                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
+              >
                 Send SMS
               </button>
             </div>
@@ -1272,6 +1371,19 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Student ID or Parent ID or Guardian ID
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.national_id}
+                      onChange={(e) => setFormData({...formData, national_id: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter ID number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Student Phone (Optional)
                     </label>
                     <input
@@ -1384,63 +1496,74 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CDF Amount (KES) *
+                      CDF Amount (KES)
                     </label>
                     <input
                       type="number"
-                      required
-                      min="1000"
-                      step="1000"
                       value={formData.amount}
                       onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="50000"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                      placeholder="0"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Leave as 0 if fully sponsored by MP</p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Sponsorship Source
+                  <div className={`p-4 rounded-xl border-2 transition-all ${
+                    formData.sponsorship_source === 'mp' ? 'bg-yellow-50 border-yellow-200 shadow-sm' : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+                      <Crown size={16} className={`mr-2 ${formData.sponsorship_source === 'mp' ? 'text-yellow-600' : 'text-gray-400'}`} />
+                      Sponsorship Type
                     </label>
-                    <select
-                      value={formData.sponsorship_source}
-                      onChange={(e) => setFormData({...formData, sponsorship_source: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      {sponsorshipSources.map(sponsor => (
-                        <option key={sponsor.value} value={sponsor.value}>{sponsor.label}</option>
-                      ))}
-                    </select>
+                    <div className="grid grid-cols-1 gap-3">
+                      <select
+                        value={formData.sponsorship_source}
+                        onChange={(e) => setFormData({...formData, sponsorship_source: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        {sponsorshipSources.map(sponsor => (
+                          <option key={sponsor.value} value={sponsor.value}>{sponsor.label}</option>
+                        ))}
+                      </select>
+                      
+                      {formData.sponsorship_source === 'mp' && (
+                        <div className="flex items-center space-x-2 p-2 bg-yellow-100 rounded-lg border border-yellow-200 animate-pulse">
+                          <CheckCircle size={16} className="text-yellow-700" />
+                          <span className="text-xs font-bold text-yellow-800 uppercase">Fully Sponsored by Mheshimiwa</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {formData.sponsorship_source !== 'cdf' && (
-                    <>
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Sponsor Name (Optional)
+                          {formData.sponsorship_source === 'mp' ? 'Mheshimiwa Name (Optional)' : 'Sponsor Name'}
                         </label>
                         <input
                           type="text"
                           value={formData.sponsor_name}
                           onChange={(e) => setFormData({...formData, sponsor_name: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Sponsor name"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          placeholder={formData.sponsorship_source === 'mp' ? 'Hon. MP Name' : 'Company/Person name'}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Sponsorship Amount (KES)
+                          Sponsorship Amount (KES) *
                         </label>
                         <input
                           type="number"
+                          required
                           value={formData.sponsorship_amount}
                           onChange={(e) => setFormData({...formData, sponsorship_amount: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Additional sponsorship amount"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          placeholder="e.g., 50000"
                         />
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
 

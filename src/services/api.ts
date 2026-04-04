@@ -130,7 +130,13 @@ api.interceptors.response.use(
     }
     
     if (error.response?.status === 400) {
-      const errorMsg = error.response.data?.detail || error.response.data?.error || 'Bad request';
+      // Handle field-specific errors
+      const data = error.response.data;
+      if (data && typeof data === 'object') {
+        const firstError = Object.values(data).flat()[0];
+        if (firstError) return Promise.reject(new Error(String(firstError)));
+      }
+      const errorMsg = data?.detail || data?.error || 'Bad request';
       return Promise.reject(new Error(errorMsg));
     }
     
@@ -207,6 +213,9 @@ export const studentsAPI = {
     return api.post('/students/bulk_send_sms/', data);
   },
   
+  bulkApprove: (studentIds: number[]) =>
+    api.post('/students/bulk_approve/', { student_ids: studentIds }),
+  
   testSMS: (phone: string, message: string) => 
     api.post('/students/test_sms/', { phone, message }),
   
@@ -236,6 +245,15 @@ export const usersAPI = {
   
   delete: (id: number) => 
     api.delete(`/users/${id}/`),
+};
+
+// Bursaries API
+export const bursariesAPI = {
+  getBudgetOverview: () => api.get('/bursaries/budgets/overview/'),
+  getWards: () => api.get('/bursaries/wards/'),
+  getAllocations: () => api.get('/bursaries/allocations/'),
+  createAllocation: (data: any) => api.post('/bursaries/allocations/', data),
+  updateBudget: (id: number, data: any) => api.patch(`/bursaries/budgets/${id}/`, data),
 };
 
 // Export the instance

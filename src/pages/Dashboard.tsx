@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   DollarSign,
   FileCheck,
   TrendingUp,
-  Calendar,
-  ArrowUp,
-  ArrowDown,
   Home,
   FileText,
   BarChart3,
   Bell,
-  Clock
+  Clock,
+  PieChart,
+  Shield,
+  ArrowUpRight,
+  Wallet,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
+import { bursariesAPI, studentsAPI } from '../services/api';
 
 const StatCard: React.FC<{
   title: string;
@@ -36,7 +40,6 @@ const StatCard: React.FC<{
           <span className={`text-sm font-medium ml-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
             {change}
           </span>
-          <span className="text-sm text-gray-500 ml-2">from last month</span>
         </div>
       </div>
       <div className={`p-3 rounded-lg ${color}`}>
@@ -47,63 +50,76 @@ const StatCard: React.FC<{
 );
 
 const Dashboard: React.FC = () => {
-  const stats = [
-    {
-      title: 'Total Students',
-      value: '2,847',
-      change: '+12.5%',
-      isPositive: true,
-      icon: <Users size={24} className="text-white" />,
-      color: 'bg-blue-500'
-    },
-    {
-      title: 'Total Allocation',
-      value: 'KSh 12.5M',
-      change: '+8.2%',
-      isPositive: true,
-      icon: <DollarSign size={24} className="text-white" />,
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Pending Applications',
-      value: '156',
-      change: '-3.2%',
-      isPositive: false,
-      icon: <FileCheck size={24} className="text-white" />,
-      color: 'bg-yellow-500'
-    },
-    {
-      title: 'Completion Rate',
-      value: '94.2%',
-      change: '+2.1%',
-      isPositive: true,
-      icon: <TrendingUp size={24} className="text-white" />,
-      color: 'bg-purple-500'
-    }
-  ];
+  const [loading, setLoading] = useState(true);
+  const [budgetOverview, setBudgetOverview] = useState<any>(null);
+  const [stats, setStats] = useState<any[]>([]);
 
-  const recentActivities = [
-    { id: 1, student: 'John Kamau', action: 'Allocation approved', amount: 'KSh 45,000', time: '2 mins ago', status: 'approved' },
-    { id: 2, student: 'Mary Wanjiku', action: 'Application submitted', amount: 'KSh 60,000', time: '15 mins ago', status: 'pending' },
-    { id: 3, student: 'Peter Ochieng', action: 'Disbursement made', amount: 'KSh 30,000', time: '1 hour ago', status: 'completed' },
-    { id: 4, student: 'Sarah Muthoni', action: 'Documents verified', amount: '-', time: '2 hours ago', status: 'verified' },
-    { id: 5, student: 'David Mutua', action: 'Application rejected', amount: 'KSh 50,000', time: '5 hours ago', status: 'rejected' },
-  ];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [budgetRes, studentsRes] = await Promise.all([
+          bursariesAPI.getBudgetOverview(),
+          studentsAPI.getAll()
+        ]);
+
+        const budgetData = budgetRes.data;
+        setBudgetOverview(budgetData);
+
+        const students = studentsRes.data.results || studentsRes.data;
+        const verifiedStudents = students.filter((s: any) => s.status === 'approved' || s.status === 'disbursed').length;
+
+        setStats([
+          {
+            title: 'Total Students',
+            value: students.length.toString(),
+            change: '+12.5%',
+            isPositive: true,
+            icon: <Users size={24} className="text-white" />,
+            color: 'bg-blue-500'
+          },
+          {
+            title: 'Verified Students',
+            value: verifiedStudents.toString(),
+            change: '+8.2%',
+            isPositive: true,
+            icon: <FileCheck size={24} className="text-white" />,
+            color: 'bg-green-500'
+          },
+          {
+            title: 'Total Budget (2026)',
+            value: `KES ${(budgetData.total_budget / 1000000).toFixed(1)}M`,
+            change: 'FY 2026',
+            isPositive: true,
+            icon: <Wallet size={24} className="text-white" />,
+            color: 'bg-purple-500'
+          },
+          {
+            title: 'Remaining Funds',
+            value: `KES ${(budgetData.remaining_budget / 1000000).toFixed(1)}M`,
+            change: `${((budgetData.remaining_budget / budgetData.total_budget) * 100).toFixed(1)}%`,
+            isPositive: true,
+            icon: <TrendingUp size={24} className="text-white" />,
+            color: 'bg-orange-500'
+          }
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
 
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-6 text-white">
-        <div className="flex flex-col md:flex-row md:items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Welcome back, Administrator! 👋</h1>
-            <p className="text-blue-100 mt-2">Here's what's happening with Chepalungu CDF today.</p>
-          </div>
-          <div className="flex items-center space-x-2 mt-4 md:mt-0">
-            <Calendar size={20} />
-            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold">Chepalungu CDF: Streamlining Constituency Development Funds for a better and brighter future</h1>
+        <p className="text-blue-100 mt-2">Financial Overview & Bursary Management</p>
       </div>
 
       {/* Stats Grid */}
@@ -113,85 +129,62 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Recent Activities and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activities */}
+        {/* Financial Overview - Ward Distribution */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Activities</h2>
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-              View All
-            </button>
+            <h2 className="text-lg font-semibold text-gray-900">Ward Fund Distribution</h2>
+            <BarChart3 className="text-gray-400" size={20} />
           </div>
           <div className="space-y-4">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                    activity.status === 'approved' ? 'bg-green-100' :
-                    activity.status === 'pending' ? 'bg-yellow-100' :
-                    activity.status === 'completed' ? 'bg-blue-100' :
-                    activity.status === 'verified' ? 'bg-purple-100' : 'bg-red-100'
-                  }`}>
-                    <span className={`text-xs font-semibold ${
-                      activity.status === 'approved' ? 'text-green-600' :
-                      activity.status === 'pending' ? 'text-yellow-600' :
-                      activity.status === 'completed' ? 'text-blue-600' :
-                      activity.status === 'verified' ? 'text-purple-600' : 'text-red-600'
-                    }`}>
-                      {activity.action.split(' ')[0][0]}
+            {budgetOverview?.wards.map((ward: any) => (
+              <div key={ward.id}>
+                <div className="flex justify-between text-sm mb-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-gray-700">{ward.name}</span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {ward.student_count || 0} students
                     </span>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{activity.student}</p>
-                    <p className="text-sm text-gray-600">{activity.action}</p>
-                  </div>
+                  <span className="text-gray-500">
+                    KES {ward.remaining_balance.toLocaleString()} / KES {ward.total_allocated.toLocaleString()}
+                  </span>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900">{activity.amount}</p>
-                  <p className="text-sm text-gray-500">{activity.time}</p>
+                <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                    style={{ width: `${(ward.remaining_balance / ward.total_allocated) * 100}%` }}
+                  ></div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Global Budget Breakdown */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
-          <div className="space-y-3">
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-              New Student Application
-            </button>
-            <button className="w-full bg-white hover:bg-gray-50 text-blue-600 font-medium py-3 px-4 rounded-lg border border-blue-600 transition-colors">
-              Process Disbursement
-            </button>
-            <button className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-lg border border-gray-300 transition-colors">
-              Generate Report
-            </button>
-            <button className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-lg border border-gray-300 transition-colors">
-              View Analytics
-            </button>
-          </div>
-
-          {/* Allocation Summary */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="font-medium text-gray-900 mb-4">Allocation Summary</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total Budget</span>
-                <span className="font-medium">KSh 50,000,000</span>
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Global Budget 2026</h2>
+          <div className="space-y-6">
+            <div className="p-4 bg-blue-50 rounded-xl">
+              <p className="text-sm text-blue-600 font-medium">Total Allocated</p>
+              <p className="text-2xl font-bold text-blue-900">KES {budgetOverview?.total_budget.toLocaleString()}</p>
+            </div>
+            <div className="p-4 bg-green-50 rounded-xl">
+              <p className="text-sm text-green-600 font-medium">Currently Remaining</p>
+              <p className="text-2xl font-bold text-green-900">KES {budgetOverview?.remaining_budget.toLocaleString()}</p>
+            </div>
+            <div className="pt-4 border-t">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-600">Utilization Rate</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {(((budgetOverview?.total_budget - budgetOverview?.remaining_budget) / budgetOverview?.total_budget) * 100).toFixed(1)}%
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Allocated</span>
-                <span className="font-medium text-green-600">KSh 32,500,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Remaining</span>
-                <span className="font-medium text-blue-600">KSh 17,500,000</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '65%' }}></div>
+              <div className="w-full bg-gray-100 rounded-full h-2">
+                <div 
+                  className="bg-purple-600 h-2 rounded-full" 
+                  style={{ width: `${((budgetOverview?.total_budget - budgetOverview?.remaining_budget) / budgetOverview?.total_budget) * 100}%` }}
+                ></div>
               </div>
             </div>
           </div>

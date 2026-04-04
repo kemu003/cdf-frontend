@@ -45,7 +45,7 @@ interface Application {
 }
 
 const Applications: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAdmin, isCommittee } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,70 +82,28 @@ const Applications: React.FC = () => {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/applications/');
-      setApplications(response.data);
+      const response = await api.get('/students/');
+      const results = response.data.results || response.data;
+      const formattedApps: Application[] = results.map((s: any) => ({
+        id: s.id,
+        applicant_name: s.name,
+        applicant_id: s.registration_no,
+        type: 'bursary',
+        category: s.education_level || 'General',
+        amount_requested: parseFloat(s.amount || 0),
+        amount_approved: s.status === 'approved' ? parseFloat(s.amount || 0) : 0,
+        status: s.status || 'pending',
+        date_submitted: s.date_applied || new Date().toISOString(),
+        ward: s.ward,
+        contact: s.phone || s.guardian_phone || 'N/A',
+        email: s.email || 'N/A',
+        description: `Bursary application for ${s.institution}`,
+        documents: []
+      }));
+      setApplications(formattedApps);
     } catch (error) {
       console.error('Error fetching applications:', error);
-      // Mock data
-      setApplications([
-        {
-          id: 1,
-          applicant_name: 'John Kamau',
-          applicant_id: 'APP-2024-001',
-          type: 'bursary',
-          category: 'University Education',
-          amount_requested: 80000,
-          amount_approved: 60000,
-          status: 'approved',
-          date_submitted: '2024-01-15',
-          ward: 'Nyangores',
-          contact: '0712345678',
-          email: 'john@example.com',
-          description: 'Second year university fees for Bachelor of Commerce',
-          documents: ['id_card.pdf', 'fee_structure.pdf'],
-          reviewer_notes: 'Approved for partial funding',
-          reviewed_by: 'Admin User',
-          reviewed_date: '2024-01-18'
-        },
-        {
-          id: 2,
-          applicant_name: 'Mary Wanjiku',
-          applicant_id: 'APP-2024-002',
-          type: 'project',
-          category: 'Community Water Project',
-          amount_requested: 500000,
-          amount_approved: 300000,
-          status: 'reviewing',
-          date_submitted: '2024-01-16',
-          ward: 'Sigor',
-          contact: '0723456789',
-          email: 'mary@example.com',
-          description: 'Construction of community water tank',
-          documents: ['proposal.pdf', 'budget.pdf'],
-          reviewer_notes: 'Under committee review',
-          reviewed_by: null,
-          reviewed_date: null
-        },
-        {
-          id: 3,
-          applicant_name: 'Peter Ochieng',
-          applicant_id: 'APP-2024-003',
-          type: 'emergency',
-          category: 'Medical Emergency',
-          amount_requested: 150000,
-          amount_approved: 100000,
-          status: 'pending',
-          date_submitted: '2024-01-17',
-          ward: 'Chebunyo',
-          contact: '0734567890',
-          email: 'peter@example.com',
-          description: 'Hospital bills for emergency surgery',
-          documents: ['medical_bills.pdf', 'doctor_report.pdf'],
-          reviewer_notes: null,
-          reviewed_by: null,
-          reviewed_date: null
-        }
-      ]);
+      setApplications([]);
     } finally {
       setLoading(false);
     }
@@ -177,25 +135,30 @@ const Applications: React.FC = () => {
     totalApproved: applications.reduce((sum, a) => sum + (a.amount_approved || 0), 0)
   };
 
-  const handleStatusUpdate = async (applicationId: number, newStatus: string, notes?: string) => {
+  const handleStatusUpdate = async (id: number, newStatus: string) => {
     try {
-      await api.put(`/applications/${applicationId}/status/`, {
-        status: newStatus,
-        notes
-      });
+      if (newStatus === 'approved') {
+        await api.put(`/students/${id}/approve/`);
+      } else if (newStatus === 'rejected') {
+        const reason = window.prompt('Enter rejection reason:');
+        if (!reason) return;
+        await api.put(`/students/${id}/reject/`, { reason });
+      }
       fetchApplications();
-    } catch (error) {
-      console.error('Error updating application status:', error);
+      alert(`Application status updated to ${newStatus}`);
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      alert(error.message || 'Failed to update status');
     }
   };
 
-  if (!user) {
+  if (!user || (!isAdmin && !isCommittee && user.role !== 'admin' && user.role !== 'committee')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700">Access Denied</h2>
-          <p className="text-gray-500 mt-2">Please login to access this page.</p>
+          <p className="text-gray-500 mt-2">You need admin or committee privileges to access this page.</p>
         </div>
       </div>
     );

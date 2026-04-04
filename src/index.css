@@ -5,4 +5,20 @@
 /* Custom styles */
 body {
   @apply bg-gray-50 text-gray-800 min-h-screen font-sans;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('/cdf2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll; /* Better performance and compatibility on mobile */
+  }
+}
+
+/* Clearer card style with backdrop blur */
+.glass-card {
+  @apply bg-white/90 backdrop-blur-md border border-white/20 shadow-xl;
 }

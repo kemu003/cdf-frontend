@@ -12,16 +12,14 @@ import StudentAllocations from "./pages/StudentAllocations";
 // Import new components
 import Budget from "./pages/Budget";
 import Applications from "./pages/Applications";
-import Projects from "./pages/Projects";
-import Calendar from "./pages/Calendar";
 import Profile from "./pages/Profile";
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement; roles?: string[] }> = ({ children, roles }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
@@ -34,7 +32,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement; roles?: string[] 
     return <Navigate to="/login" replace />;
   }
 
-  if (roles && !roles.includes(user.role)) {
+  // Allow superusers/admins to access everything, or check specific roles
+  if (roles && !isAdmin && !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -122,28 +121,6 @@ const App: React.FC = () => {
             <ProtectedRoute>
               <Layout>
                 <Applications />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/projects"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Projects />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/calendar"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Calendar />
               </Layout>
             </ProtectedRoute>
           }

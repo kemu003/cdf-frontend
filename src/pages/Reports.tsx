@@ -162,29 +162,28 @@ const Reports: React.FC = () => {
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/reports/');
-      console.log('Reports API response:', response.data);
+      // In a real app, you might have a reports endpoint
+      // For now, we'll derive some data from students
+      const response = await api.get('/students/');
+      const students = response.data.results || response.data;
       
-      let reportsData = response.data;
-      if (reportsData && typeof reportsData === 'object' && !Array.isArray(reportsData)) {
-        if ('results' in reportsData) {
-          reportsData = reportsData.results;
-        } else if ('data' in reportsData) {
-          reportsData = reportsData.data;
-        }
-      }
-      
-      if (Array.isArray(reportsData)) {
-        const formattedReports = reportsData.map((report: any) => ({
-          ...report,
-          file_size_display: formatFileSize(report.file_size)
-        }));
-        setReports(formattedReports);
-      } else {
-        console.warn('Expected array but got:', typeof reportsData);
-        setReports([]);
-      }
-    } catch (error: any) {
+      // Create some "virtual" reports based on real student data
+      const realStatsReport: Report = {
+        id: 1,
+        title: 'Current Student Allocation Summary',
+        report_type: 'student_allocation',
+        description: `Summary of ${students.length} students currently in the system.`,
+        format: 'csv',
+        status: 'completed',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        total_students: students.length,
+        total_amount: students.reduce((sum: number, s: any) => sum + parseFloat(s.amount || 0), 0),
+        approved_count: students.filter((s: any) => s.status === 'approved' || s.status === 'disbursed').length,
+      };
+
+      setReports([realStatsReport]);
+    } catch (error) {
       console.error('Error fetching reports:', error);
       setReports([]);
     } finally {
@@ -230,7 +229,7 @@ const Reports: React.FC = () => {
       } else {
         setFilters({
           years: ['2024', '2023', '2022', '2021'],
-          wards: ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'Kongasis'],
+          wards: ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'kongasis'],
           education_levels: ['Secondary', 'University', 'College', 'TVET'],
           statuses: ['approved', 'pending', 'rejected'],
           sponsorship_sources: ['cdf', 'mp', 'other']
@@ -240,7 +239,7 @@ const Reports: React.FC = () => {
       console.error('Error fetching report filters:', error);
       setFilters({
         years: ['2024', '2023', '2022', '2021'],
-        wards: ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'Kongasis'],
+        wards: ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'kongasis'],
         education_levels: ['Secondary', 'University', 'College', 'TVET'],
         statuses: ['approved', 'pending', 'rejected'],
         sponsorship_sources: ['cdf', 'mp', 'other']
