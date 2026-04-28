@@ -44,7 +44,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Backend configuration
 const BACKEND_URLS = {
-  production: 'https://cdf-backend.onrender.com/api/'
+  production: 'https://cdf-backend.onrender.com/api'
 } as const;
 
 // Helper to detect the best backend to use
@@ -106,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Try to access a public endpoint
       // Increased timeout to 15s to allow for Render cold starts
-      const response = await axios.get(`${targetUrl}auth/check/`, {
+      const response = await axios.get(`${targetUrl}/auth/check/`, {
         timeout: 15000,
         validateStatus: (status) => status < 500,
       });

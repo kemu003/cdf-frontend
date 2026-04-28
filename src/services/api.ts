@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Get base URL from environment variable or fallback to production URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cdf-backend.onrender.com/api/';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cdf-backend.onrender.com/api';
 
 // Debug: Check initial state
 console.log('[API] Initializing with base URL:', API_BASE_URL);
