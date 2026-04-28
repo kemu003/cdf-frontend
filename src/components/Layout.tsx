@@ -203,45 +203,62 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </aside>
 
         {/* Sidebar - Mobile */}
-        {sidebarOpen && (
-          <div className="lg:hidden fixed inset-0 z-40">
-            <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setSidebarOpen(false)} />
-            <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
-              <nav className="p-4 space-y-1 mt-16">
-                {navItems.map((item) => (
-                  <SidebarItem
-                    key={item.to}
-                    icon={item.icon}
-                    label={item.label}
-                    to={item.to}
-                    active={isActive(item.to)}
-                    onClick={() => setSidebarOpen(false)}
-                  />
-                ))}
-                
-                {user?.role === 'admin' && (
-                  <>
-                    <div className="pt-6 pb-2 px-4">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Administration
-                      </h3>
-                    </div>
-                    {adminItems.map((item) => (
-                      <SidebarItem
-                        key={item.to}
-                        icon={item.icon}
-                        label={item.label}
-                        to={item.to}
-                        active={isActive(item.to)}
-                        onClick={() => setSidebarOpen(false)}
-                      />
-                    ))}
-                  </>
-                )}
-              </nav>
+        <div 
+          className={`lg:hidden fixed inset-0 z-40 transition-opacity duration-300 ${
+            sidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+          }`}
+        >
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+          <div 
+            className={`fixed inset-y-0 left-0 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center space-x-2">
+                <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
+                  <Building size={18} className="text-white" />
+                </div>
+                <span className="font-bold text-gray-900">Chepalungu CDF</span>
+              </div>
+              <button onClick={() => setSidebarOpen(false)} className="p-2 text-gray-500">
+                <X size={24} />
+              </button>
             </div>
+            <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-64px)]">
+              {navItems.map((item) => (
+                <SidebarItem
+                  key={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  to={item.to}
+                  active={isActive(item.to)}
+                  onClick={() => setSidebarOpen(false)}
+                />
+              ))}
+              
+              {user?.role === 'admin' && (
+                <>
+                  <div className="pt-6 pb-2 px-4">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Administration
+                    </h3>
+                  </div>
+                  {adminItems.map((item) => (
+                    <SidebarItem
+                      key={item.to}
+                      icon={item.icon}
+                      label={item.label}
+                      to={item.to}
+                      active={isActive(item.to)}
+                      onClick={() => setSidebarOpen(false)}
+                    />
+                  ))}
+                </>
+              )}
+            </nav>
           </div>
-        )}
+        </div>
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8">

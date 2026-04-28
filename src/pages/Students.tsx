@@ -95,27 +95,27 @@ const StatCard: React.FC<{
   color: string;
   description?: string;
 }> = ({ title, value, change, isPositive, icon, color, description }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-600 truncate">{title}</p>
+        <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2 truncate">{value}</p>
         {description && (
-          <p className="text-xs text-gray-500 mt-1">{description}</p>
+          <p className="text-xs text-gray-500 mt-1 truncate">{description}</p>
         )}
         <div className="flex items-center mt-2">
           {isPositive ? (
-            <ArrowUp size={16} className="text-green-500" />
+            <ArrowUp size={14} className="text-green-500" />
           ) : (
-            <ArrowDown size={16} className="text-red-500" />
+            <ArrowDown size={14} className="text-red-500" />
           )}
-          <span className={`text-sm font-medium ml-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <span className={`text-xs sm:text-sm font-medium ml-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
             {change}
           </span>
-          <span className="text-sm text-gray-500 ml-2">from last month</span>
+          <span className="text-[10px] sm:text-xs text-gray-500 ml-1 sm:ml-2">last month</span>
         </div>
       </div>
-      <div className={`p-3 rounded-lg ${color}`}>
+      <div className={`p-2 sm:p-3 rounded-lg ${color} flex-shrink-0 ml-2`}>
         {icon}
       </div>
     </div>
@@ -130,37 +130,37 @@ const YearFilterCard: React.FC<{
 }> = ({ yearData, isSelected, onClick, isCurrentYear }) => (
   <div
     onClick={onClick}
-    className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
+    className={`p-3 sm:p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
       isSelected
         ? 'bg-blue-50 border-blue-300 shadow-sm'
         : 'bg-white border-gray-200'
     }`}
   >
     <div className="flex items-center justify-between mb-2">
-      <div className="flex items-center space-x-2">
-        <Calendar size={18} className={isCurrentYear ? 'text-blue-600' : 'text-gray-500'} />
-        <span className={`font-semibold ${isCurrentYear ? 'text-blue-700' : 'text-gray-700'}`}>
+      <div className="flex items-center space-x-2 min-w-0">
+        <Calendar size={18} className={`flex-shrink-0 ${isCurrentYear ? 'text-blue-600' : 'text-gray-500'}`} />
+        <span className={`font-semibold truncate ${isCurrentYear ? 'text-blue-700' : 'text-gray-700'}`}>
           {yearData.label}
         </span>
         {isCurrentYear && (
-          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+          <span className="flex-shrink-0 px-2 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-800 rounded-full">
             Current
           </span>
         )}
       </div>
-      <div className={`p-1 rounded-full ${isSelected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+      <div className={`flex-shrink-0 p-1 rounded-full ${isSelected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
         {isSelected ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </div>
     </div>
     
-    <div className="grid grid-cols-2 gap-3 mt-3">
-      <div className="bg-gray-50 rounded-lg p-2">
-        <p className="text-xs text-gray-600">Total Students</p>
-        <p className="text-lg font-bold text-gray-900">{yearData.count}</p>
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-3">
+      <div className="bg-gray-50 rounded-lg p-2 min-w-0">
+        <p className="text-[10px] text-gray-600 truncate">Total Students</p>
+        <p className="text-base sm:text-lg font-bold text-gray-900 truncate">{yearData.count}</p>
       </div>
-      <div className="bg-gray-50 rounded-lg p-2">
-        <p className="text-xs text-gray-600">Total Amount</p>
-        <p className="text-lg font-bold text-gray-900">
+      <div className="bg-gray-50 rounded-lg p-2 min-w-0">
+        <p className="text-[10px] text-gray-600 truncate">Total Amount</p>
+        <p className="text-base sm:text-lg font-bold text-gray-900 truncate">
           {new Intl.NumberFormat('en-KE', {
             style: 'currency',
             currency: 'KES',
@@ -1118,35 +1118,37 @@ export default function Students() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Student Management</h1>
-          <p className="text-gray-600 mt-2">Manage and track all Chepalungu CDF and MP-sponsored student beneficiaries</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Student Management</h1>
+          <p className="text-sm text-gray-600 mt-1">Manage and track all Chepalungu CDF and MP-sponsored student beneficiaries</p>
         </div>
-        <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
-          <button
-            onClick={handleRefresh}
-            disabled={loading}
-            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-          >
-            <RefreshCw size={18} className="mr-2" />
-            Refresh
-          </button>
-          <button 
-            onClick={handleExportData}
-            disabled={loading || filteredStudents.length === 0}
-            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-          >
-            <FileSpreadsheet size={18} className="mr-2" />
-            Export {selectedYear !== 'all' && `(${selectedYear === 'current' ? currentYear : selectedYear})`}
-          </button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex-1 sm:flex-none flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              <RefreshCw size={16} className="mr-2" />
+              Refresh
+            </button>
+            <button 
+              onClick={handleExportData}
+              disabled={loading || filteredStudents.length === 0}
+              className="flex-1 sm:flex-none flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              <FileSpreadsheet size={16} className="mr-2" />
+              Export
+            </button>
+          </div>
           <button 
             onClick={() => setShowForm(true)}
-            className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm shadow-sm"
           >
-            <UserPlus size={18} className="mr-2" />
+            <UserPlus size={16} className="mr-2" />
             Add New Student
           </button>
         </div>
@@ -1184,10 +1186,10 @@ export default function Students() {
 
       {/* MP Sponsorship Summary Card */}
       {mpSponsorshipSummary.totalMpSponsored > 0 && (
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
             <div className="flex items-center">
-              <Crown size={24} className="text-yellow-600 mr-3" />
+              <Crown size={24} className="text-yellow-600 mr-3 flex-shrink-0" />
               <div>
                 <h2 className="text-lg font-bold text-yellow-900">MP Sponsorship Summary</h2>
                 <p className="text-sm text-yellow-700">Overview of Member of Parliament sponsored students</p>
@@ -1195,31 +1197,31 @@ export default function Students() {
             </div>
             <button
               onClick={() => setSelectedSponsorshipSource('mp')}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 flex items-center"
+              className="w-full sm:w-auto px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 flex items-center justify-center text-sm transition-colors shadow-sm"
             >
               <Target size={16} className="mr-2" />
               View MP Sponsored
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="bg-white p-4 rounded-lg border border-yellow-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total MP Sponsored</p>
-                  <p className="text-2xl font-bold text-gray-900">{mpSponsorshipSummary.totalMpSponsored}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Total MP Sponsored</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{mpSponsorshipSummary.totalMpSponsored}</p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-full">
                   <UserCheck size={20} className="text-yellow-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs sm:text-sm text-gray-500 mt-2">
                 {formatCurrency(mpSponsorshipSummary.totalMpAmount)} total sponsorship
               </p>
             </div>
             
             <div className="bg-white p-4 rounded-lg border border-yellow-200">
-              <p className="text-sm text-gray-600 mb-2">Top Wards with MP Sponsored Students</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Top Wards</p>
               <div className="space-y-2">
                 {Object.entries(mpSponsorshipSummary.mpStudentsByWard)
                   .filter(([_, count]) => count > 0)
@@ -1227,8 +1229,8 @@ export default function Students() {
                   .slice(0, 3)
                   .map(([ward, count]) => (
                     <div key={ward} className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">{ward}</span>
-                      <span className="px-2 py-1 text-xs font-bold bg-yellow-100 text-yellow-800 rounded">
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">{ward}</span>
+                      <span className="px-2 py-0.5 text-[10px] sm:text-xs font-bold bg-yellow-100 text-yellow-800 rounded">
                         {count} students
                       </span>
                     </div>
@@ -1237,15 +1239,15 @@ export default function Students() {
             </div>
             
             <div className="bg-white p-4 rounded-lg border border-yellow-200">
-              <p className="text-sm text-gray-600 mb-2">MP Sponsorship by Year</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Sponsorship by Year</p>
               <div className="space-y-2">
                 {Object.entries(mpSponsorshipSummary.mpStudentsByYear)
                   .sort(([yearA], [yearB]) => parseInt(yearB) - parseInt(yearA))
                   .slice(0, 3)
                   .map(([year, count]) => (
                     <div key={year} className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">{year}</span>
-                      <span className="px-2 py-1 text-xs font-bold bg-yellow-100 text-yellow-800 rounded">
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">{year}</span>
+                      <span className="px-2 py-0.5 text-[10px] sm:text-xs font-bold bg-yellow-100 text-yellow-800 rounded">
                         {count} students
                       </span>
                     </div>
@@ -1257,8 +1259,8 @@ export default function Students() {
       )}
 
       {/* Year Overview Section */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <Layers size={20} className="mr-2 text-blue-600" />
@@ -1266,13 +1268,13 @@ export default function Students() {
             </h2>
             <p className="text-sm text-gray-600 mt-1">Browse students by academic year</p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 text-xs sm:text-sm">
             <BarChart3 size={18} className="text-gray-500" />
-            <span className="text-sm text-gray-600">{students.length} total students across all years</span>
+            <span className="text-gray-600">{students.length} total students</span>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {yearSummaryData.map((yearData) => (
             <YearFilterCard
               key={yearData.value}
@@ -1296,28 +1298,28 @@ export default function Students() {
       </div>
 
       {/* Controls */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full lg:max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search size={18} className="text-gray-400" />
             </div>
             <input
               type="search"
-              placeholder="Search students by name, admission number, or institution..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Search students..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <Filter size={18} className="text-gray-500" />
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center space-x-2 flex-1 min-w-[140px] sm:flex-none">
+              <Filter size={16} className="text-gray-500 hidden sm:block" />
               <select
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
@@ -1329,7 +1331,7 @@ export default function Students() {
             </div>
 
             <select 
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 min-w-[120px] sm:flex-none border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               value={selectedWard}
               onChange={(e) => setSelectedWard(e.target.value)}
             >
@@ -1342,9 +1344,9 @@ export default function Students() {
             <select
               value={filterEducationLevel}
               onChange={(e) => setFilterEducationLevel(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 min-w-[140px] sm:flex-none border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             >
-              <option value="all">All Education Levels</option>
+              <option value="all">All Levels</option>
               {educationLevels.map(level => (
                 <option key={level.value} value={level.value}>{level.label}</option>
               ))}
@@ -1354,7 +1356,7 @@ export default function Students() {
             <select
               value={selectedSponsorshipSource}
               onChange={(e) => setSelectedSponsorshipSource(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 min-w-[130px] sm:flex-none border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             >
               <option value="all">All Sponsors</option>
               {sponsorshipSources.map(sponsor => (
@@ -1364,16 +1366,16 @@ export default function Students() {
               ))}
             </select>
 
-            {/* View Toggle */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            {/* View Toggle - Hidden on very small screens */}
+            <div className="hidden sm:flex border border-gray-300 rounded-lg overflow-hidden">
               <button
-                className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}
+                className={`px-3 py-2 text-sm ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}
                 onClick={() => setViewMode('grid')}
               >
                 Grid
               </button>
               <button
-                className={`px-3 py-2 ${viewMode === 'table' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}
+                className={`px-3 py-2 text-sm ${viewMode === 'table' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}
                 onClick={() => setViewMode('table')}
               >
                 Table
@@ -1383,27 +1385,26 @@ export default function Students() {
         </div>
 
         {/* Selected Year Info */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-blue-900">
-                {selectedYear === 'current' ? `Current Academic Year (${currentYear})` :
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-medium text-blue-900 truncate text-sm sm:text-base">
+                {selectedYear === 'current' ? `Current Year (${currentYear})` :
                  selectedYear === 'all' ? 'All Academic Years' :
                  `Academic Year ${selectedYear}`}
               </h3>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-xs sm:text-sm text-blue-700 mt-1 truncate">
                 Showing {filteredStudents.length} students
-                {selectedYear !== 'all' && ` from ${selectedYear === 'current' ? currentYear : selectedYear}`}
                 {selectedSponsorshipSource !== 'all' && ` • ${sponsorshipSources.find(s => s.value === selectedSponsorshipSource)?.label}`}
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 onClick={() => {
                   setSelectedYear('current');
                   setSelectedSponsorshipSource('all');
                 }}
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium transition-colors ${
                   selectedYear === 'current' && selectedSponsorshipSource === 'all'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
@@ -1416,7 +1417,7 @@ export default function Students() {
                   setSelectedYear('all');
                   setSelectedSponsorshipSource('mp');
                 }}
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium transition-colors ${
                   selectedSponsorshipSource === 'mp'
                     ? 'bg-yellow-600 text-white'
                     : 'bg-white text-yellow-600 border border-yellow-300 hover:bg-yellow-50'
@@ -1433,9 +1434,9 @@ export default function Students() {
                   setFilterEducationLevel('all');
                   setSearchTerm('');
                 }}
-                className="px-3 py-1 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+                className="px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-white text-gray-600 border border-gray-300 hover:bg-gray-50 transition-colors"
               >
-                Clear All Filters
+                Clear Filters
               </button>
             </div>
           </div>
@@ -1444,7 +1445,7 @@ export default function Students() {
         {/* Ward Distribution */}
         <div className="mt-6">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Ward Distribution</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {wardDistribution.map(({ ward, count, mpCount, totalAmount }) => (
               <div key={ward} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-gray-100 transition-colors">
                 <p className="text-sm font-medium text-gray-900">{count}</p>
@@ -1455,7 +1456,7 @@ export default function Students() {
                     <span className="text-xs text-yellow-600 font-medium">{mpCount} MP</span>
                   </div>
                 )}
-                <p className="text-xs text-gray-500 mt-1">{formatCurrency(totalAmount)}</p>
+                <p className="text-xs text-gray-500 mt-1 font-semibold">{formatCurrency(totalAmount)}</p>
               </div>
             ))}
           </div>

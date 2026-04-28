@@ -103,15 +103,15 @@ const StatCard: React.FC<{
   color: string;
   iconBg: string;
 }> = ({ title, value, subtitle, icon, color, iconBg }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
-        <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+        <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2 truncate">{value}</p>
+        <p className="text-[10px] sm:text-sm text-gray-500 mt-1 truncate">{subtitle}</p>
       </div>
-      <div className={`p-3 rounded-lg ${iconBg}`}>
-        {React.cloneElement(icon as React.ReactElement, { className: `w-6 h-6 ${color}` })}
+      <div className={`p-2 sm:p-3 rounded-lg ${iconBg} flex-shrink-0 ml-2`}>
+        {React.cloneElement(icon as React.ReactElement, { className: `w-5 h-5 sm:w-6 sm:h-6 ${color}` })}
       </div>
     </div>
   </div>
@@ -121,20 +121,20 @@ const SMSCard: React.FC<{
   balance: string;
   provider: string;
 }> = ({ balance, provider }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between">
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="flex items-center">
-          <Send className="w-5 h-5 text-gray-500 mr-2" />
-          <p className="text-sm font-medium text-gray-600">SMS Balance</p>
+          <Send className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mr-2 flex-shrink-0" />
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">SMS Balance</p>
         </div>
-        <p className="text-2xl font-bold text-gray-900 mt-2">{balance}</p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2 truncate">{balance}</p>
+        <p className="text-[10px] sm:text-sm text-gray-500 mt-1 truncate">
           Provider: <span className="font-medium">{provider}</span>
         </p>
       </div>
-      <div className="p-3 rounded-lg bg-blue-100">
-        <Phone className="w-6 h-6 text-blue-600" />
+      <div className="p-2 sm:p-3 rounded-lg bg-blue-100 flex-shrink-0 ml-2">
+        <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
       </div>
     </div>
   </div>
