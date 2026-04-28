@@ -8,26 +8,15 @@ export default defineConfig({
     host: true, // Allow connections from all hosts
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: 'https://cdf-backend.onrender.com',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        },
       },
     },
   },
   // Optional: For development environment variables
   define: {
-    'import.meta.env.VITE_API_BASE_URL': JSON.stringify('/api'),
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify('https://cdf-backend.onrender.com/api'),
   },
 })

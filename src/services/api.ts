@@ -2,9 +2,7 @@
 import axios from 'axios';
 
 // Get base URL from environment variable or fallback to production URL
-// Use VITE_API_BASE_URL for Render deployment, or fallback to the live render URL.
-// In local development, you should create a .env file with VITE_API_BASE_URL=http://localhost:8000/api
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://chepalungu-backend-63dv.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cdf-backend.onrender.com/api';
 
 // Debug: Check initial state
 console.log('[API] Initializing with base URL:', API_BASE_URL);
@@ -94,7 +92,7 @@ api.interceptors.response.use(
         }
         
         console.log('[API] Refreshing token...');
-        const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
+        const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
           refresh: refreshToken
         });
         
@@ -161,15 +159,15 @@ api.interceptors.response.use(
 export const authAPI = {
   // Get JWT tokens
   getToken: (username: string, password: string) => 
-    api.post('/auth/token/', { username, password }),
+    api.post('/token/', { username, password }),
   
   // Refresh token
   refreshToken: (refresh: string) => 
-    api.post('/auth/token/refresh/', { refresh }),
+    api.post('/token/refresh/', { refresh }),
   
   // Verify token
   verifyToken: (token: string) => 
-    api.post('/auth/token/verify/', { token }),
+    api.post('/token/verify/', { token }),
   
   // Get current user
   getCurrentUser: () => 

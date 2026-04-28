@@ -36,7 +36,7 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
   apiBaseUrl: string;
   backendReachable: boolean;
-  backendType: 'local' | 'production' | 'detecting';
+  backendType: 'production';
   retryBackendConnection: () => Promise<void>;
 }
 
@@ -44,28 +44,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Backend configuration
 const BACKEND_URLS = {
-  local: 'https://cdf-backend.onrender.com/api'
+  production: 'https://cdf-backend.onrender.com/api'
 } as const;
 
 // Helper to detect the best backend to use
 const detectBestBackend = async (): Promise<{
   url: string;
-  type: 'local' | 'production';
+  type: 'production';
 }> => {
-  const isLocalhost = window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '';
-
-  // For local development, always use local backend
-  if (isLocalhost) {
-    console.log('Local development detected, using local backend');
-    return { url: BACKEND_URLS.local, type: 'local' };
-  }
-
-  // For production, use production URL
-  // If you don't have production yet, default to local
-  console.log('Production environment detected, using local backend (default)');
-  return { url: BACKEND_URLS.local, type: 'local' };
+  return { url: BACKEND_URLS.production, type: 'production' };
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -75,8 +62,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [isLoading, setIsLoading] = useState(false);
   const [backendReachable, setBackendReachable] = useState(false);
-  const [backendType, setBackendType] = useState<'local' | 'production' | 'detecting'>('detecting');
-  const [apiBaseUrl, setApiBaseUrl] = useState<string>(BACKEND_URLS.local);
+  const [backendType, setBackendType] = useState<'production'>('production');
+  const [apiBaseUrl, setApiBaseUrl] = useState<string>(BACKEND_URLS.production);
 
   // Initialize backend detection
   useEffect(() => {
@@ -222,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       // Get JWT tokens using the shared api instance
-      const tokenResponse = await api.post('/auth/token/', payload, {
+      const tokenResponse = await api.post('/token/', payload, {
         timeout: 15000
       });
 
