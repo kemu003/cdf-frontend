@@ -17,6 +17,6 @@ export default defineConfig({
   },
   // Optional: For development environment variables
   define: {
-    'import.meta.env.VITE_API_BASE_URL': JSON.stringify('https://cdf-backend.onrender.com/api'),
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify('https://cdf-backend.onrender.com/api/'),
   },
 })
