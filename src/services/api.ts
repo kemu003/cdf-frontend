@@ -1,7 +1,10 @@
 // src/services/api.ts
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+// Get base URL from environment variable or fallback to production URL
+// Use VITE_API_BASE_URL for Render deployment, or fallback to the live render URL.
+// In local development, you should create a .env file with VITE_API_BASE_URL=http://localhost:8000/api
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://chepalungu-backend-63dv.onrender.com/api';
 
 // Debug: Check initial state
 console.log('[API] Initializing with base URL:', API_BASE_URL);

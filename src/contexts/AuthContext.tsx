@@ -44,7 +44,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Backend configuration
 const BACKEND_URLS = {
-  local: 'http://127.0.0.1:8000/api'
+  local: 'https://cdf-backend.onrender.com/api'
 } as const;
 
 // Helper to detect the best backend to use
@@ -52,9 +52,9 @@ const detectBestBackend = async (): Promise<{
   url: string;
   type: 'local' | 'production';
 }> => {
-  const isLocalhost = window.location.hostname === 'localhost' || 
-                     window.location.hostname === '127.0.0.1' ||
-                     window.location.hostname === '';
+  const isLocalhost = window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '';
 
   // For local development, always use local backend
   if (isLocalhost) {
@@ -89,18 +89,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { url, type } = await detectBestBackend();
       setApiBaseUrl(url);
       setBackendType(type);
-      
+
       // Update the shared api instance baseURL
       api.defaults.baseURL = url;
       console.log('Backend initialized:', { url, type });
-      
+
       // Check connectivity to selected backend
       await checkBackendConnection(url);
-      
+
       // If we have a user stored, check auth
       const savedUser = localStorage.getItem("user");
       const accessToken = localStorage.getItem("access_token");
-      
+
       if (savedUser && accessToken) {
         await checkAuth();
       }
@@ -146,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const checkAuth = async () => {
     const savedUser = localStorage.getItem("user");
     const accessToken = localStorage.getItem("access_token");
-    
+
     if (!savedUser || !accessToken || !backendReachable) {
       setUser(null);
       return;
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const userData = JSON.parse(savedUser);
-      
+
       // Verify token by trying to access a protected endpoint using the shared api instance
       try {
         const response = await api.get("/users/me/");
@@ -171,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           is_staff: response.data.is_staff || userData.is_staff,
           is_superuser: response.data.is_superuser || userData.is_superuser,
         };
-        
+
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
         console.log("✅ User is authenticated and token is valid");
@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (identifier: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
-    
+
     try {
       // Ensure backend is reachable
       if (!backendReachable) {
@@ -207,42 +207,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw new Error(`Cannot connect to backend. Please ensure the server is running. Current backend: ${backendType} (${apiBaseUrl})`);
         }
       }
-      
+
       // Determine if identifier is email or username
       const isEmail = identifier.includes('@');
-      
+
       // Use the shared api instance for login
-      const payload = isEmail 
+      const payload = isEmail
         ? { email: identifier, password }
         : { username: identifier, password };
-      
-      console.log(`Attempting login at ${backendType} backend:`, { 
+
+      console.log(`Attempting login at ${backendType} backend:`, {
         url: apiBaseUrl,
-        payload 
+        payload
       });
-      
+
       // Get JWT tokens using the shared api instance
       const tokenResponse = await api.post('/auth/token/', payload, {
         timeout: 15000
       });
-      
+
       if (!tokenResponse.data.access || !tokenResponse.data.refresh) {
         throw new Error("Invalid response from authentication server");
       }
-      
+
       const { access, refresh } = tokenResponse.data;
-      
+
       // Store tokens
       localStorage.setItem("access_token", access);
       localStorage.setItem("refresh_token", refresh);
-      
+
       // Now get user info using the token
       let userData: User;
-      
+
       try {
         // Try to get user details from /users/me/
         const userResponse = await api.get('/users/me/');
-        
+
         userData = {
           id: userResponse.data.id,
           username: userResponse.data.username || identifier,
@@ -257,13 +257,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           is_active: userResponse.data.is_active !== undefined ? userResponse.data.is_active : true,
           is_verified: userResponse.data.is_verified || true,
         };
-        
+
       } catch (userError: any) {
         // If /users/me/ endpoint doesn't exist, create user from available data
         console.log("User endpoint not accessible, creating user from login data");
-        
+
         const isAdminUser = identifier === "admin" || identifier === "admin@Chepalungu.go.ke";
-        
+
         userData = {
           id: 1,
           username: identifier,
@@ -279,24 +279,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           is_verified: true,
         };
       }
-      
+
       // Store user
       localStorage.setItem("user", JSON.stringify(userData));
-      
+
       setUser(userData);
       setIsLoading(false);
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         user: userData,
         token: access
       };
-      
+
     } catch (error: any) {
       setIsLoading(false);
-      
+
       let errorMessage = "Login failed. Please try again.";
-      
+
       if (error.response?.status === 401) {
         errorMessage = "Invalid email/username or password.";
       } else if (error.response?.status === 400) {
@@ -308,7 +308,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         errorMessage = error.message || "Unknown error occurred.";
       }
-      
+
       throw new Error(errorMessage);
     }
   };
@@ -319,7 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     setUser(null);
-    
+
     // Redirect to login
     window.location.href = "/login";
   };
@@ -329,10 +329,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isStaff = user ? user.role === "staff" : false;
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
       isLoading,
       isAuthenticated: !!user && !!localStorage.getItem("access_token"),
       isAdmin,
