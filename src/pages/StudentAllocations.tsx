@@ -436,7 +436,7 @@ export default function Students() {
     const mpStudentsByWard: Record<string, number> = {};
     
     wards.forEach(ward => {
-      mpStudentsByWard[ward] = mpStudents.filter(s => s.ward === ward).length;
+      mpStudentsByWard[ward] = mpStudents.filter(s => (s.ward_name || s.ward) === ward).length;
     });
     
     setMpSponsorshipSummary({
@@ -495,6 +495,7 @@ export default function Students() {
         institution: s.institution,
         course: s.course || '',
         ward: s.ward,
+        ward_name: s.ward_name || (typeof s.ward === 'string' ? s.ward : ''),
         status: s.status === 'disbursed' ? 'disbursed' : s.status,
         allocatedAmount: `Ksh ${parseFloat(s.amount || 0).toLocaleString()}`,
         contact: s.phone || s.guardian_phone || '',
@@ -743,57 +744,10 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
     setIsSubmitting(true);
     try {
       if (editingStudent) {
-        const response = await studentsAPI.update(editingStudent.id, studentData);
-        // Map response back to the local Student interface
-        const updatedStudent: Student = {
-          ...editingStudent,
-          ...response.data,
-          admissionNumber: response.data.registration_no,
-          allocatedAmount: `Ksh ${parseFloat(response.data.amount || 0).toLocaleString()}`,
-          contact: response.data.phone || response.data.guardian_phone || '',
-          amount: parseFloat(response.data.amount || 0),
-          sponsorship_amount: response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0,
-          total_allocation: response.data.total_allocation || 
-            parseFloat(response.data.amount || 0) + (response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0),
-          ward: wardObj.name // Store name in local state for display
-        };
-        
-        setStudents(prev => prev.map(s => 
-          s.id === editingStudent.id ? updatedStudent : s
-        ));
+        await studentsAPI.update(editingStudent.id, studentData);
         alert('Student updated successfully!');
       } else {
-        const response = await studentsAPI.create(studentData);
-        const newStudent: Student = {
-          ...response.data,
-          id: response.data.id,
-          name: response.data.name,
-          admissionNumber: response.data.registration_no,
-          registration_no: response.data.registration_no,
-          institution: response.data.institution,
-          course: response.data.course || '',
-          ward: wardObj.name, // Store name in local state for display
-          status: response.data.status,
-          allocatedAmount: `Ksh ${parseFloat(response.data.amount || 0).toLocaleString()}`,
-          contact: response.data.phone || response.data.guardian_phone || '',
-          phone: response.data.phone,
-          guardian_phone: response.data.guardian_phone,
-          year: response.data.year,
-          date_applied: response.data.date_applied,
-          date_processed: response.data.date_processed,
-          education_level: response.data.education_level || 'high_school',
-          sms_status: response.data.sms_status || 'not_sent',
-          amount: parseFloat(response.data.amount || 0),
-          sponsorship_source: response.data.sponsorship_source || 'cdf',
-          sponsor_name: response.data.sponsor_name,
-          sponsorship_date: response.data.sponsorship_date,
-          sponsorship_amount: response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0,
-          sponsor_details: response.data.sponsor_details,
-          rejection_reason: response.data.rejection_reason,
-          total_allocation: response.data.total_allocation || 
-            parseFloat(response.data.amount || 0) + (response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0)
-        };
-        setStudents(prev => [newStudent, ...prev]);
+        await studentsAPI.create(studentData);
         alert('Student added successfully!');
       }
       
@@ -805,6 +759,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       });
       setShowForm(false);
       setEditingStudent(null);
+      fetchStudents(); // Refresh data to get correct names and IDs
       
     } catch (error: any) {
       console.error("Error saving student:", error);
@@ -996,7 +951,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       const matchesStatus = selectedStatus === 'all' || 
                            (selectedStatus === 'approved' ? (student.status === 'approved' || student.status === 'disbursed') : student.status === selectedStatus);
       
-      const matchesWard = selectedWard === 'all' || student.ward === selectedWard;
+      const matchesWard = selectedWard === 'all' || (student.ward_name || student.ward) === selectedWard;
       
       const matchesEducationLevel = filterEducationLevel === 'all' || student.education_level === filterEducationLevel;
       

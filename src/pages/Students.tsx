@@ -56,6 +56,8 @@ interface Student {
   education_level: string;
   sms_status: 'not_sent' | 'sent' | 'failed' | 'partial';
   amount: number;
+  ward: number | string;
+  ward_name?: string;
   // Sponsorship fields
   sponsorship_source: 'cdf' | 'mp' | 'other';
   sponsor_name?: string;
@@ -282,7 +284,7 @@ const StudentCard: React.FC<{
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <Building size={16} className="mr-2 text-gray-400" />
-          <span>{student.ward} Ward</span>
+          <span>{student.ward_name || student.ward} Ward</span>
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <Mail size={16} className="mr-2 text-gray-400" />
@@ -412,7 +414,33 @@ export default function Students() {
     mpStudentsByYear: {}
   });
 
-  const wards = ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'kongasis'];
+  const [wards, setWards] = useState<{id: number, name: string}[]>([]);
+  const [loadingWards, setLoadingWards] = useState(false);
+
+  const fetchWards = async () => {
+    setLoadingWards(true);
+    try {
+      const response = await bursariesAPI.getWards();
+      const wardData = response.data.results || response.data;
+      setWards(wardData.map((w: any) => ({ id: w.id, name: w.name })));
+    } catch (error) {
+      console.error('Error fetching wards:', error);
+      // Fallback to defaults if API fails
+      setWards([
+        { id: 1, name: 'Nyangores' },
+        { id: 2, name: 'Sigor' },
+        { id: 3, name: 'Chebunyo' },
+        { id: 4, name: 'Siongiroi' },
+        { id: 5, name: 'kongasis' }
+      ]);
+    } finally {
+      setLoadingWards(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWards();
+  }, []);
 
   const educationLevels = [
     { value: 'high_school', label: 'High School' },
@@ -472,7 +500,7 @@ export default function Students() {
     const mpStudentsByYear: Record<string, number> = {};
     
     wards.forEach(ward => {
-      mpStudentsByWard[ward] = mpStudents.filter(s => s.ward === ward).length;
+      mpStudentsByWard[ward.name] = mpStudents.filter(s => (s.ward_name || s.ward) === ward.name).length;
     });
     
     mpStudents.forEach(student => {
@@ -513,6 +541,7 @@ export default function Students() {
         institution: s.institution,
         course: s.course || '',
         ward: s.ward,
+        ward_name: s.ward_name || (typeof s.ward === 'string' ? s.ward : ''),
         status: s.status === 'disbursed' ? 'approved' : s.status,
         allocatedAmount: formatCurrency(parseFloat(s.amount || 0)),
         contact: s.phone || s.guardian_phone || 'No contact',
@@ -739,69 +768,10 @@ export default function Students() {
     setIsSubmitting(true);
     try {
       if (editingStudent) {
-        const response = await studentsAPI.update(editingStudent.id, studentData);
-        const updatedStudent: Student = {
-          id: response.data.id,
-          name: response.data.name,
-          admissionNumber: response.data.registration_no,
-          registration_no: response.data.registration_no,
-          institution: response.data.institution,
-          course: response.data.course || '',
-          ward: response.data.ward,
-          status: response.data.status,
-          allocatedAmount: formatCurrency(parseFloat(response.data.amount || 0)),
-          contact: response.data.phone || response.data.guardian_phone || 'No contact',
-          phone: response.data.phone,
-          guardian_phone: response.data.guardian_phone,
-          year: response.data.year,
-          date_applied: response.data.date_applied,
-          education_level: response.data.education_level || '',
-          sms_status: response.data.sms_status || 'not_sent',
-          amount: parseFloat(response.data.amount || 0),
-          sponsorship_source: response.data.sponsorship_source || 'cdf',
-          sponsor_name: response.data.sponsor_name,
-          sponsorship_date: response.data.sponsorship_date,
-          sponsorship_amount: response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0,
-          sponsor_details: response.data.sponsor_details,
-          date_processed: response.data.date_processed,
-          rejection_reason: response.data.rejection_reason,
-          total_allocation: response.data.total_allocation || parseFloat(response.data.amount || 0) + (response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0)
-        };
-        
-        setStudents(prev => prev.map(s => 
-          s.id === editingStudent.id ? updatedStudent : s
-        ));
+        await studentsAPI.update(editingStudent.id, studentData);
         alert('Student updated successfully!');
       } else {
-        const response = await studentsAPI.create(studentData);
-        const newStudent: Student = {
-          id: response.data.id,
-          name: response.data.name,
-          admissionNumber: response.data.registration_no,
-          registration_no: response.data.registration_no,
-          institution: response.data.institution,
-          course: response.data.course || '',
-          ward: response.data.ward,
-          status: response.data.status,
-          allocatedAmount: formatCurrency(parseFloat(response.data.amount || 0)),
-          contact: response.data.phone || response.data.guardian_phone || 'No contact',
-          phone: response.data.phone,
-          guardian_phone: response.data.guardian_phone,
-          year: response.data.year,
-          date_applied: response.data.date_applied,
-          education_level: response.data.education_level || '',
-          sms_status: response.data.sms_status || 'not_sent',
-          amount: parseFloat(response.data.amount || 0),
-          sponsorship_source: response.data.sponsorship_source || 'cdf',
-          sponsor_name: response.data.sponsor_name,
-          sponsorship_date: response.data.sponsorship_date,
-          sponsorship_amount: response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0,
-          sponsor_details: response.data.sponsor_details,
-          date_processed: response.data.date_processed,
-          rejection_reason: response.data.rejection_reason,
-          total_allocation: response.data.total_allocation || parseFloat(response.data.amount || 0) + (response.data.sponsorship_amount ? parseFloat(response.data.sponsorship_amount) : 0)
-        };
-        setStudents(prev => [newStudent, ...prev]);
+        await studentsAPI.create(studentData);
         alert('Student added successfully!');
       }
       
@@ -813,6 +783,7 @@ export default function Students() {
       });
       setShowForm(false);
       setEditingStudent(null);
+      fetchStudents(); // Refresh to get correct ward names and computed fields
       
     } catch (error: any) {
       console.error("Error saving student:", error);
@@ -1019,7 +990,7 @@ export default function Students() {
       const matchesStatus = selectedStatus === 'all' || 
                            (selectedStatus === 'approved' ? (student.status === 'approved' || student.status === 'disbursed') : student.status === selectedStatus);
       
-      const matchesWard = selectedWard === 'all' || student.ward === selectedWard;
+      const matchesWard = selectedWard === 'all' || (student.ward_name || student.ward) === selectedWard;
       
       const matchesEducationLevel = filterEducationLevel === 'all' || student.education_level === filterEducationLevel;
       
@@ -1099,10 +1070,10 @@ export default function Students() {
 
   // Calculate ward distribution for filtered students
   const wardDistribution = wards.map(ward => {
-    const count = filteredStudents.filter(s => s.ward === ward).length;
-    const mpCount = filteredStudents.filter(s => s.ward === ward && s.sponsorship_source === 'mp').length;
-    const totalAmount = filteredStudents.filter(s => s.ward === ward).reduce((sum, s) => sum + (s.total_allocation || s.amount), 0);
-    return { ward, count, mpCount, totalAmount };
+    const count = filteredStudents.filter(s => (s.ward_name || s.ward) === ward.name).length;
+    const mpCount = filteredStudents.filter(s => (s.ward_name || s.ward) === ward.name && s.sponsorship_source === 'mp').length;
+    const totalAmount = filteredStudents.filter(s => (s.ward_name || s.ward) === ward.name).reduce((sum, s) => sum + (s.total_allocation || s.amount), 0);
+    return { ward: ward.name, count, mpCount, totalAmount };
   });
 
   if (!user || (!isAdmin && !isCommittee && user.role !== 'admin' && user.role !== 'committee')) {
@@ -1337,7 +1308,7 @@ export default function Students() {
             >
               <option value="all">All Wards</option>
               {wards.map((ward) => (
-                <option key={ward} value={ward}>{ward}</option>
+                <option key={ward.id} value={ward.name}>{ward.name}</option>
               ))}
             </select>
 
@@ -1554,7 +1525,7 @@ export default function Students() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <Building size={14} className="mr-1 text-gray-400" />
-                        {student.ward}
+                        {student.ward_name || student.ward}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -1849,8 +1820,8 @@ export default function Students() {
                     >
                       <option value="" disabled>Select Ward</option>
                       {wards.map(ward => (
-                        <option key={ward} value={ward}>
-                          {ward}
+                        <option key={ward.id} value={ward.id}>
+                          {ward.name}
                         </option>
                       ))}
                     </select>
