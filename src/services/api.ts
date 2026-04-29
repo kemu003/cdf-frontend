@@ -155,6 +155,15 @@ api.interceptors.response.use(
 
 // ===== API FUNCTIONS =====
 
+// Bursaries API
+export const bursariesAPI = {
+  getBudgetOverview: () => api.get('/bursaries/budgets/overview/'),
+  getWards: () => api.get('/bursaries/wards/'),
+  getAllocations: () => api.get('/bursaries/allocations/'),
+  createAllocation: (data: any) => api.post('/bursaries/allocations/', data),
+  updateBudget: (id: number, data: any) => api.patch(`/bursaries/budgets/${id}/`, data),
+};
+
 // Auth API
 export const authAPI = {
   // Get JWT tokens
@@ -246,15 +255,6 @@ export const usersAPI = {
   
   delete: (id: number) => 
     api.delete(`/users/${id}/`),
-};
-
-// Bursaries API
-export const bursariesAPI = {
-  getBudgetOverview: () => api.get('/bursaries/budgets/overview/'),
-  getWards: () => api.get('/bursaries/wards/'),
-  getAllocations: () => api.get('/bursaries/allocations/'),
-  createAllocation: (data: any) => api.post('/bursaries/allocations/', data),
-  updateBudget: (id: number, data: any) => api.patch(`/bursaries/budgets/${id}/`, data),
 };
 
 // Export the instance
