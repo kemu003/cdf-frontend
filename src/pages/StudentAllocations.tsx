@@ -402,7 +402,7 @@ export default function Students() {
 
   const fetchWards = async () => {
     try {
-      const response = await api.get('/bursaries/wards/');
+      const response = await bursariesAPI.getWards();
       console.log('[Allocations] Wards API Response:', response.data);
       const wardData = response.data.results || response.data;
       

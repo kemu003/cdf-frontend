@@ -36,7 +36,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { api, studentsAPI } from '../services/api';
+import { api, studentsAPI, bursariesAPI } from '../services/api';
 
 interface Student {
   id: number;
