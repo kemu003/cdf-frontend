@@ -414,25 +414,31 @@ export default function Students() {
     mpStudentsByYear: {}
   });
 
-  const [wards, setWards] = useState<{id: number, name: string}[]>([]);
+  const [availableWards, setAvailableWards] = useState<{id: number, name: string}[]>([]);
   const [loadingWards, setLoadingWards] = useState(false);
 
   const fetchWards = async () => {
     setLoadingWards(true);
     try {
       const response = await bursariesAPI.getWards();
+      console.log('[Wards] API Response:', response.data);
       const wardData = response.data.results || response.data;
-      setWards(wardData.map((w: any) => ({ id: w.id, name: w.name })));
+      
+      if (!Array.isArray(wardData) || wardData.length === 0) {
+        console.warn('[Wards] No wards returned from API');
+        setAvailableWards([]);
+        return;
+      }
+      
+      const mappedWards = wardData.map((w: any) => ({ 
+        id: typeof w.id === 'string' ? parseInt(w.id) : w.id, 
+        name: w.name 
+      }));
+      console.log('[Wards] Mapped Wards:', mappedWards);
+      setAvailableWards(mappedWards);
     } catch (error) {
-      console.error('Error fetching wards:', error);
-      // Fallback to defaults if API fails
-      setWards([
-        { id: 1, name: 'Nyangores' },
-        { id: 2, name: 'Sigor' },
-        { id: 3, name: 'Chebunyo' },
-        { id: 4, name: 'Siongiroi' },
-        { id: 5, name: 'kongasis' }
-      ]);
+      console.error('[Wards] Error fetching wards:', error);
+      setAvailableWards([]);
     } finally {
       setLoadingWards(false);
     }
@@ -499,7 +505,7 @@ export default function Students() {
     const mpStudentsByWard: Record<string, number> = {};
     const mpStudentsByYear: Record<string, number> = {};
     
-    wards.forEach(ward => {
+    availableWards.forEach(ward => {
       mpStudentsByWard[ward.name] = mpStudents.filter(s => (s.ward_name || s.ward) === ward.name).length;
     });
     
@@ -746,7 +752,6 @@ export default function Students() {
       institution: formData.institution.trim(),
       course: courseValue.trim(),
       year: formData.year,
-      ward: formData.ward,
       amount: parseFloat(formData.amount),
       education_level: formData.education_level,
       sponsorship_source: formData.sponsorship_source,
@@ -754,6 +759,21 @@ export default function Students() {
       sms_status: 'not_sent',
       date_applied: new Date().toISOString()
     };
+
+    const wardValue = typeof formData.ward === 'string' ? parseInt(formData.ward) : formData.ward;
+    
+    if (isNaN(wardValue as number)) {
+      // Try to find by name if it's a name (handle case-insensitivity)
+      const foundWard = availableWards.find(w => w.name.toLowerCase() === String(formData.ward).toLowerCase());
+      if (foundWard) {
+        studentData.ward = foundWard.id;
+      } else {
+        alert(`Invalid ward: ${formData.ward}. Please select a ward from the list.`);
+        return;
+      }
+    } else {
+      studentData.ward = wardValue;
+    }
 
     // Add sponsorship specific fields
     if (formData.sponsorship_source === 'mp' || formData.sponsorship_source === 'other') {
@@ -1069,7 +1089,7 @@ export default function Students() {
   ];
 
   // Calculate ward distribution for filtered students
-  const wardDistribution = wards.map(ward => {
+  const wardDistribution = availableWards.map(ward => {
     const count = filteredStudents.filter(s => (s.ward_name || s.ward) === ward.name).length;
     const mpCount = filteredStudents.filter(s => (s.ward_name || s.ward) === ward.name && s.sponsorship_source === 'mp').length;
     const totalAmount = filteredStudents.filter(s => (s.ward_name || s.ward) === ward.name).reduce((sum, s) => sum + (s.total_allocation || s.amount), 0);
@@ -1307,7 +1327,7 @@ export default function Students() {
               onChange={(e) => setSelectedWard(e.target.value)}
             >
               <option value="all">All Wards</option>
-              {wards.map((ward) => (
+              {availableWards.map((ward) => (
                 <option key={ward.id} value={ward.name}>{ward.name}</option>
               ))}
             </select>
@@ -1658,34 +1678,34 @@ export default function Students() {
 
       {/* Add/Edit Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {editingStudent ? 'Edit Student' : 'Add New Student'}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingStudent(null);
-                    setFormData({
-                      name: '', registration_no: '', phone: '', guardian_phone: '', institution: '',
-                      course: '', year: '', ward: '', amount: '', education_level: '',
-                      sponsorship_source: 'cdf', sponsor_name: '', sponsorship_date: '',
-                      sponsorship_amount: '', sponsor_details: ''
-                    });
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl w-full max-w-4xl my-auto shadow-2xl relative">
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-4 sm:p-6 rounded-t-xl flex items-center justify-between z-10">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                {editingStudent ? 'Edit Student' : 'Add New Student'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingStudent(null);
+                  setFormData({
+                    name: '', registration_no: '', phone: '', guardian_phone: '', institution: '',
+                    course: '', year: '', ward: '', amount: '', education_level: '',
+                    sponsorship_source: 'cdf', sponsor_name: '', sponsorship_date: '',
+                    sponsorship_amount: '', sponsor_details: ''
+                  });
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 sm:p-8 max-h-[calc(100vh-120px)] overflow-y-auto">
+              <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Student Full Name *
                     </label>
                     <input
@@ -1693,13 +1713,13 @@ export default function Students() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="John Doe"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                      placeholder="e.g. John Doe"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Registration Number *
                     </label>
                     <input
@@ -1707,26 +1727,26 @@ export default function Students() {
                       required
                       value={formData.registration_no}
                       onChange={(e) => setFormData({...formData, registration_no: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="BU/2023/001"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                      placeholder="e.g. BU/2023/001"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Student Phone (Optional)
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                       placeholder="0712345678"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Guardian Phone *
                     </label>
                     <input
@@ -1734,20 +1754,20 @@ export default function Students() {
                       required
                       value={formData.guardian_phone}
                       onChange={(e) => setFormData({...formData, guardian_phone: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                       placeholder="0723456789"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Education Level *
                     </label>
                     <select
                       required
                       value={formData.education_level}
                       onChange={(e) => setFormData({...formData, education_level: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-white"
                     >
                       <option value="">Select Level</option>
                       {educationLevels.map(level => (
@@ -1757,7 +1777,7 @@ export default function Students() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Institution *
                     </label>
                     <input
@@ -1765,14 +1785,14 @@ export default function Students() {
                       required
                       value={formData.institution}
                       onChange={(e) => setFormData({...formData, institution: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                       placeholder="University/College/School name"
                     />
                   </div>
 
                   {formData.education_level !== 'high_school' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
                         Course *
                       </label>
                       <input
@@ -1780,21 +1800,21 @@ export default function Students() {
                         required={formData.education_level !== 'high_school'}
                         value={formData.course}
                         onChange={(e) => setFormData({...formData, course: e.target.value})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="e.g., Bachelor of Commerce"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                        placeholder="e.g. Bachelor of Commerce"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Year of Study *
                     </label>
                     <select
                       required
                       value={formData.year}
                       onChange={(e) => setFormData({...formData, year: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-white"
                     >
                       <option value="">Select Year</option>
                       <option value="Form 1">Form 1</option>
@@ -1809,17 +1829,17 @@ export default function Students() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Ward *
                     </label>
                     <select
                       required
                       value={formData.ward}
                       onChange={(e) => setFormData({...formData, ward: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-white"
                     >
                       <option value="" disabled>Select Ward</option>
-                      {wards.map(ward => (
+                      {availableWards.map(ward => (
                         <option key={ward.id} value={ward.id}>
                           {ward.name}
                         </option>
@@ -1828,7 +1848,7 @@ export default function Students() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       CDF Amount (KES) *
                     </label>
                     <input
@@ -1838,33 +1858,33 @@ export default function Students() {
                       step="1000"
                       value={formData.amount}
                       onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="50000"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                      placeholder="e.g. 5000"
                     />
                   </div>
 
                   {/* Sponsorship Source Field */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
                       Sponsorship Source *
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       {sponsorshipSources.map(sponsor => (
                         <div
                           key={sponsor.value}
-                          onClick={() => setFormData({...formData, sponsorship_source: sponsor.value})}
-                          className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                          onClick={() => setFormData({...formData, sponsorship_source: sponsor.value as any})}
+                          className={`p-3 sm:p-4 border rounded-xl cursor-pointer transition-all flex flex-row sm:flex-col items-center sm:items-start sm:justify-between gap-3 ${
                             formData.sponsorship_source === sponsor.value
                               ? sponsor.value === 'mp' 
-                                ? 'border-yellow-300 bg-yellow-50' 
+                                ? 'border-yellow-400 bg-yellow-50 ring-2 ring-yellow-400/20' 
                                 : sponsor.value === 'cdf'
-                                ? 'border-blue-300 bg-blue-50'
-                                : 'border-purple-300 bg-purple-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                                ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-400/20'
+                                : 'border-purple-400 bg-purple-50 ring-2 ring-purple-400/20'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
                           }`}
                         >
-                          <div className="flex items-center">
-                            <div className={`p-2 rounded-full mr-3 ${
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg flex-shrink-0 ${
                               sponsor.value === 'mp' 
                                 ? 'bg-yellow-100 text-yellow-600' 
                                 : sponsor.value === 'cdf'
@@ -1874,21 +1894,21 @@ export default function Students() {
                               {sponsor.icon}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{sponsor.label}</p>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="font-bold text-gray-900 text-sm sm:text-base">{sponsor.label}</p>
+                              <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block mt-0.5">
                                 {sponsor.value === 'mp' 
-                                  ? 'Sponsored by Member of Parliament'
+                                  ? 'Member of Parliament'
                                   : sponsor.value === 'cdf'
-                                  ? 'Sponsored by CDF Fund'
-                                  : 'Other sponsorship source'}
+                                  ? 'CDF Fund'
+                                  : 'Other sources'}
                               </p>
                             </div>
-                            {formData.sponsorship_source === sponsor.value && (
-                              <div className="ml-auto">
-                                <CheckCircle size={20} className="text-green-500" />
-                              </div>
-                            )}
                           </div>
+                          {formData.sponsorship_source === sponsor.value && (
+                            <div className="ml-auto sm:mt-2">
+                              <CheckCircle size={20} className="text-green-500" />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1897,52 +1917,52 @@ export default function Students() {
                   {/* MP/Other Sponsorship Specific Fields */}
                   {formData.sponsorship_source !== 'cdf' && (
                     <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="md:col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Sponsor Name (Optional)
                         </label>
                         <input
                           type="text"
                           value={formData.sponsor_name}
                           onChange={(e) => setFormData({...formData, sponsor_name: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder={formData.sponsorship_source === 'mp' ? "e.g., Hon. MP Name" : "Company/Organization Name"}
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                          placeholder={formData.sponsorship_source === 'mp' ? "e.g. Hon. MP Name" : "Company/Organization Name"}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Sponsorship Date
                         </label>
                         <input
                           type="date"
                           value={formData.sponsorship_date}
                           onChange={(e) => setFormData({...formData, sponsorship_date: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-white"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Sponsorship Amount (KES)
                         </label>
                         <input
                           type="number"
                           value={formData.sponsorship_amount}
                           onChange={(e) => setFormData({...formData, sponsorship_amount: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Amount sponsored"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                          placeholder="0"
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Sponsor Details (Optional)
                         </label>
                         <textarea
                           value={formData.sponsor_details}
                           onChange={(e) => setFormData({...formData, sponsor_details: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all min-h-[80px]"
                           placeholder="Additional details about the sponsorship..."
                           rows={3}
                         />
@@ -1951,7 +1971,7 @@ export default function Students() {
                   )}
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 sm:p-6 rounded-b-xl flex flex-col-reverse sm:flex-row justify-end gap-3 z-10">
                   <button
                     type="button"
                     onClick={() => {
@@ -1964,22 +1984,22 @@ export default function Students() {
                         sponsorship_amount: '', sponsor_details: ''
                       });
                     }}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    className="w-full sm:w-auto px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full sm:w-auto px-8 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader className="w-5 h-5 animate-spin inline mr-2" />
-                        {editingStudent ? 'Updating...' : 'Adding...'}
+                        <Loader className="w-5 h-5 animate-spin mr-2" />
+                        {editingStudent ? 'Saving Changes...' : 'Adding Student...'}
                       </>
                     ) : (
-                      editingStudent ? 'Update Student' : 'Add Student'
+                      editingStudent ? 'Update Student' : 'Save Student'
                     )}
                   </button>
                 </div>

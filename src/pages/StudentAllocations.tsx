@@ -403,9 +403,24 @@ export default function Students() {
   const fetchWards = async () => {
     try {
       const response = await api.get('/bursaries/wards/');
-      setWardsList(response.data.results || response.data);
+      console.log('[Allocations] Wards API Response:', response.data);
+      const wardData = response.data.results || response.data;
+      
+      if (!Array.isArray(wardData)) {
+        console.warn('[Allocations] No wards returned from API');
+        setWardsList([]);
+        return;
+      }
+
+      const mappedWards = wardData.map((w: any) => ({ 
+        id: typeof w.id === 'string' ? parseInt(w.id) : w.id, 
+        name: w.name 
+      }));
+      console.log('[Allocations] Mapped Wards:', mappedWards);
+      setWardsList(mappedWards);
     } catch (error) {
-      console.error('Failed to fetch wards:', error);
+      console.error('[Allocations] Failed to fetch wards:', error);
+      setWardsList([]);
     }
   };
 
@@ -707,9 +722,20 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
 
     const courseValue = formData.education_level === 'high_school' ? '' : formData.course;
     
-    // Find the ward ID from the name
-    const wardObj = wardsList.find(w => w.name === formData.ward);
-    if (!wardObj) {
+    const wardValue = typeof formData.ward === 'string' ? parseInt(formData.ward) : formData.ward;
+    let wardId: number | null = null;
+
+    if (!isNaN(wardValue as number)) {
+      wardId = wardValue as number;
+    } else {
+      // Find the ward ID from the name (case-insensitive)
+      const wardObj = wardsList.find(w => w.name.toLowerCase() === String(formData.ward).toLowerCase());
+      if (wardObj) {
+        wardId = wardObj.id;
+      }
+    }
+
+    if (!wardId) {
       alert(`Invalid ward: ${formData.ward}. Please select a ward from the list.`);
       return;
     }
@@ -723,7 +749,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       institution: formData.institution.trim(),
       course: courseValue.trim(),
       year: formData.year,
-      ward: wardObj.id, // Use the ID here!
+      ward: wardId,
       amount: parseFloat(formData.amount) || 0,
       education_level: formData.education_level,
       sponsorship_source: formData.sponsorship_source,
@@ -1270,34 +1296,34 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
 
       {/* Add/Edit Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {editingStudent ? 'Edit Student' : 'Add New Student'}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingStudent(null);
-                    setFormData({
-                      name: '', registration_no: '', phone: '', guardian_phone: '', institution: '',
-                      course: '', year: '', ward: '', amount: '', education_level: 'high_school',
-                      sponsorship_source: 'cdf', sponsor_name: '', sponsorship_date: '',
-                      sponsorship_amount: '', sponsor_details: ''
-                    });
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl w-full max-w-4xl my-auto shadow-2xl relative">
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-4 sm:p-6 rounded-t-xl flex items-center justify-between z-10">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                {editingStudent ? 'Edit Student' : 'Add New Student'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingStudent(null);
+                  setFormData({
+                    name: '', registration_no: '', phone: '', guardian_phone: '', institution: '',
+                    course: '', year: '', ward: '', amount: '', education_level: 'high_school',
+                    sponsorship_source: 'cdf', sponsor_name: '', sponsorship_date: '',
+                    sponsorship_amount: '', sponsor_details: ''
+                  });
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 sm:p-8 max-h-[calc(100vh-120px)] overflow-y-auto">
+              <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Student Full Name *
                     </label>
                     <input
@@ -1305,13 +1331,13 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="John Doe"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                      placeholder="e.g. John Doe"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Registration Number *
                     </label>
                     <input
@@ -1319,39 +1345,39 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                       required
                       value={formData.registration_no}
                       onChange={(e) => setFormData({...formData, registration_no: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="SC/COM/0074"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                      placeholder="e.g. SC/COM/0074"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Student ID or Parent ID or Guardian ID
                     </label>
                     <input
                       type="text"
                       value={formData.national_id}
                       onChange={(e) => setFormData({...formData, national_id: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                       placeholder="Enter ID number"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Student Phone (Optional)
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="254712345678"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                      placeholder="e.g. 0712345678"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Guardian Phone *
                     </label>
                     <input
@@ -1359,29 +1385,29 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                       required
                       value={formData.guardian_phone}
                       onChange={(e) => setFormData({...formData, guardian_phone: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="254712345678"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                      placeholder="e.g. 0723456789"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Education Level *
                     </label>
                     <select
                       required
                       value={formData.education_level}
                       onChange={(e) => setFormData({...formData, education_level: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-white"
                     >
                       <option value="high_school">High School</option>
-                      <option value="college">College</option>
+                      <option value="college">College / TVET</option>
                       <option value="university">University</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Institution *
                     </label>
                     <input
@@ -1389,14 +1415,14 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                       required
                       value={formData.institution}
                       onChange={(e) => setFormData({...formData, institution: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                       placeholder="University/College/School name"
                     />
                   </div>
 
                   {formData.education_level !== 'high_school' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
                         Course *
                       </label>
                       <input
@@ -1404,21 +1430,21 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                         required={formData.education_level !== 'high_school'}
                         value={formData.course}
                         onChange={(e) => setFormData({...formData, course: e.target.value})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="e.g., Bachelor of Commerce"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
+                        placeholder="e.g. Bachelor of Commerce"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Year of Study *
                     </label>
                     <select
                       required
                       value={formData.year}
                       onChange={(e) => setFormData({...formData, year: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-white"
                     >
                       <option value="">Select Year</option>
                       <option value="Form 1">Form 1</option>
@@ -1433,40 +1459,42 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Ward *
                     </label>
                     <select
                       required
                       value={formData.ward}
                       onChange={(e) => setFormData({...formData, ward: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-white"
                     >
                       <option value="" disabled>Select Ward</option>
-                      {wards.map(ward => (
-                        <option key={ward} value={ward}>{ward}</option>
+                      {wardsList.map(ward => (
+                        <option key={ward.id} value={ward.id}>
+                          {ward.name}
+                        </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       CDF Amount (KES)
                     </label>
                     <input
                       type="number"
                       value={formData.amount}
                       onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all bg-gray-50"
                       placeholder="0"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Leave as 0 if fully sponsored by MP</p>
+                    <p className="text-[10px] text-gray-500 mt-1 italic">Leave as 0 if fully sponsored by MP</p>
                   </div>
 
                   <div className={`p-4 rounded-xl border-2 transition-all ${
                     formData.sponsorship_source === 'mp' ? 'bg-yellow-50 border-yellow-200 shadow-sm' : 'bg-gray-50 border-gray-200'
                   }`}>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+                    <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center">
                       <Crown size={16} className={`mr-2 ${formData.sponsorship_source === 'mp' ? 'text-yellow-600' : 'text-gray-400'}`} />
                       Sponsorship Type
                     </label>
@@ -1474,7 +1502,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                       <select
                         value={formData.sponsorship_source}
                         onChange={(e) => setFormData({...formData, sponsorship_source: e.target.value})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base"
                       >
                         {sponsorshipSources.map(sponsor => (
                           <option key={sponsor.value} value={sponsor.value}>{sponsor.label}</option>
@@ -1482,31 +1510,31 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                       </select>
                       
                       {formData.sponsorship_source === 'mp' && (
-                        <div className="flex items-center space-x-2 p-2 bg-yellow-100 rounded-lg border border-yellow-200 animate-pulse">
-                          <CheckCircle size={16} className="text-yellow-700" />
-                          <span className="text-xs font-bold text-yellow-800 uppercase">Fully Sponsored by Mheshimiwa</span>
+                        <div className="flex items-center space-x-2 p-2 bg-yellow-100 rounded-lg border border-yellow-200">
+                          <CheckCircle size={16} className="text-yellow-700 flex-shrink-0" />
+                          <span className="text-[10px] font-bold text-yellow-800 uppercase tracking-tight">Fully Sponsored by Member of Parliament</span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   {formData.sponsorship_source !== 'cdf' && (
-                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           {formData.sponsorship_source === 'mp' ? 'Mheshimiwa Name (Optional)' : 'Sponsor Name'}
                         </label>
                         <input
                           type="text"
                           value={formData.sponsor_name}
                           onChange={(e) => setFormData({...formData, sponsor_name: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base transition-all"
                           placeholder={formData.sponsorship_source === 'mp' ? 'Hon. MP Name' : 'Company/Person name'}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Sponsorship Amount (KES) *
                         </label>
                         <input
@@ -1514,43 +1542,43 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                           required
                           value={formData.sponsorship_amount}
                           onChange={(e) => setFormData({...formData, sponsorship_amount: e.target.value})}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                          placeholder="e.g., 50000"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base transition-all"
+                          placeholder="e.g. 50000"
                         />
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 sm:p-6 rounded-b-xl flex flex-col-reverse sm:flex-row justify-end gap-3 z-10">
                   <button
                     type="button"
                     onClick={() => {
                       setShowForm(false);
                       setEditingStudent(null);
                       setFormData({
-                        name: '', registration_no: '', phone: '', guardian_phone: '', institution: '',
+                        name: '', registration_no: '', national_id: '', phone: '', guardian_phone: '', institution: '',
                         course: '', year: '', ward: '', amount: '', education_level: 'high_school',
                         sponsorship_source: 'cdf', sponsor_name: '', sponsorship_date: '',
                         sponsorship_amount: '', sponsor_details: ''
                       });
                     }}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    className="w-full sm:w-auto px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full sm:w-auto px-8 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader className="w-5 h-5 animate-spin inline mr-2" />
-                        {editingStudent ? 'Updating...' : 'Adding...'}
+                        <Loader className="w-5 h-5 animate-spin mr-2" />
+                        {editingStudent ? 'Saving Changes...' : 'Saving Student...'}
                       </>
                     ) : (
-                      editingStudent ? 'Update Student' : 'Add Student'
+                      editingStudent ? 'Update Student' : 'Save Student'
                     )}
                   </button>
                 </div>
