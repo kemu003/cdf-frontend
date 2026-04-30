@@ -36,7 +36,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { api, studentsAPI, bursariesAPI } from '../services/api';
+import { api, studentsAPI } from '../services/api';
 
 interface Student {
   id: number;
@@ -420,7 +420,7 @@ export default function Students() {
   const fetchWards = async () => {
     setLoadingWards(true);
     try {
-      const response = await bursariesAPI.getWards();
+      const response = await api.get('/bursaries/wards/');
       console.log('[Wards] API Response:', response.data);
       const wardData = response.data.results || response.data;
       
