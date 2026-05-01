@@ -97,15 +97,15 @@ const StatCard: React.FC<{
   color: string;
   description?: string;
 }> = ({ title, value, change, isPositive, icon, color, description }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-600 truncate">{title}</p>
-        <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2 truncate">{value}</p>
+        <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1.5 truncate">{value}</p>
         {description && (
           <p className="text-xs text-gray-500 mt-1 truncate">{description}</p>
         )}
-        <div className="flex items-center mt-2">
+        <div className="flex items-center mt-1.5">
           {isPositive ? (
             <ArrowUp size={14} className="text-green-500" />
           ) : (
@@ -117,7 +117,7 @@ const StatCard: React.FC<{
           <span className="text-[10px] sm:text-xs text-gray-500 ml-1 sm:ml-2">last month</span>
         </div>
       </div>
-      <div className={`p-2 sm:p-3 rounded-lg ${color} flex-shrink-0 ml-2`}>
+      <div className={`p-2 rounded-lg ${color} flex-shrink-0 ml-2`}>
         {icon}
       </div>
     </div>
@@ -1109,12 +1109,12 @@ export default function Students() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-4 p-3 sm:p-6 pt-20 sm:pt-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Student Management</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage and track all Chepalungu CDF and MP-sponsored student beneficiaries</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">Manage and track all Chepalungu CDF and MP-sponsored student beneficiaries</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="flex gap-2 w-full sm:w-auto">
@@ -1250,8 +1250,8 @@ export default function Students() {
       )}
 
       {/* Year Overview Section */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <Layers size={20} className="mr-2 text-blue-600" />
@@ -1265,7 +1265,7 @@ export default function Students() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
           {yearSummaryData.map((yearData) => (
             <YearFilterCard
               key={yearData.value}
@@ -1282,14 +1282,14 @@ export default function Students() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {studentStats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
       </div>
 
       {/* Controls */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Search */}
           <div className="relative flex-1 w-full lg:max-w-md">
@@ -1434,11 +1434,11 @@ export default function Students() {
         </div>
 
         {/* Ward Distribution */}
-        <div className="mt-6">
+        <div className="mt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Ward Distribution</h4>
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {wardDistribution.map(({ ward, count, mpCount, totalAmount }) => (
-              <div key={ward} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-gray-100 transition-colors">
+              <div key={ward} className="bg-gray-50 rounded-lg p-2.5 text-center hover:bg-gray-100 transition-colors">
                 <p className="text-sm font-medium text-gray-900">{count}</p>
                 <p className="text-xs text-gray-600 truncate">{ward}</p>
                 {mpCount > 0 && (
@@ -1460,182 +1460,229 @@ export default function Students() {
           <Loader className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading students...</p>
         </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStudents.map((student) => (
-            <StudentCard 
-              key={student.id} 
-              student={student} 
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onView={handleView}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              userRole={user.role}
-            />
-          ))}
-        </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
-                        checked={selectedStudents.size === filteredStudents.length && filteredStudents.length > 0}
-                        onChange={handleSelectAll}
-                      />
-                      Student
-                    </div>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution & Course</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ward</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sponsor</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocation</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredStudents.map((student) => (
-                  <tr key={student.id} className={`hover:bg-gray-50 ${student.sponsorship_source === 'mp' ? 'bg-yellow-50/50' : ''} ${selectedStudents.has(student.id) ? 'bg-blue-50/50' : ''}`}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-4"
-                          checked={selectedStudents.has(student.id)}
-                          onChange={() => handleSelect(student.id)}
-                        />
-                        <div className={`h-10 w-10 ${student.sponsorship_source === 'mp' ? 'bg-yellow-100' : student.sponsorship_source === 'other' ? 'bg-purple-100' : 'bg-blue-100'} rounded-full flex items-center justify-center`}>
-                          {student.sponsorship_source === 'mp' ? (
-                            <Crown size={16} className="text-yellow-600" />
-                          ) : student.sponsorship_source === 'other' ? (
-                            <UserCheck size={16} className="text-purple-600" />
-                          ) : (
-                            <Users size={16} className="text-blue-600" />
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="flex items-center space-x-2">
-                            <div className="text-sm font-medium text-gray-900">{student.name}</div>
-                            {student.sponsorship_source === 'mp' && (
-                              <Crown size={12} className="text-yellow-500" />
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500">{student.admissionNumber || student.registration_no}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{student.institution}</div>
-                      <div className="text-sm text-gray-500">
-                        {student.education_level === 'high_school' ? 'High School' :
-                         student.education_level === 'college' ? 'College' :
-                         student.education_level === 'university' ? 'University' : ''}
-                        {student.course ? ` • ${student.course}` : ''}
-                        {student.year ? ` • ${student.year}` : ''}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <Building size={14} className="mr-1 text-gray-400" />
-                        {student.ward_name || student.ward}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {getApplicationYear(student)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        student.sponsorship_source === 'mp' 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : student.sponsorship_source === 'cdf'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {student.sponsorship_source === 'mp' ? 'MP' : 
-                         student.sponsorship_source === 'cdf' ? 'CDF' : 'Other'}
-                      </span>
-                      {student.sponsor_name && (
-                        <div className="text-xs text-gray-500 mt-1">{student.sponsor_name}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        student.status === 'approved' || student.status === 'disbursed' ? 'bg-green-100 text-green-800' :
-                        student.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      <div>
-                        <div className="font-bold">{formatCurrency(student.total_allocation || student.amount)}</div>
-                        {student.sponsorship_amount && student.sponsorship_amount > 0 && (
-                          <div className="text-xs text-gray-600">
-                            CDF: {formatCurrency(student.amount)}
-                            {student.sponsorship_source === 'mp' ? (
-                              <span className="text-yellow-600 ml-2">MP: {formatCurrency(student.sponsorship_amount)}</span>
-                            ) : (
-                              <span className="text-purple-600 ml-2">Sponsor: {formatCurrency(student.sponsorship_amount)}</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button 
-                          onClick={() => handleView(student)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleEdit(student)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        {(isAdmin || isCommittee || user.role === 'admin' || user.role === 'committee') && student.status === 'pending' && (
-                          <>
-                            <button 
-                              onClick={() => handleApprove(student.id)}
-                              className="text-green-600 hover:text-green-900"
-                              title="Approve"
-                            >
-                              <CheckCircle size={18} />
-                            </button>
-                            <button 
-                              onClick={() => handleReject(student.id)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Reject"
-                            >
-                              <XCircle size={18} />
-                            </button>
-                          </>
-                        )}
-                        <button 
-                          onClick={() => handleDelete(student.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          <div className="space-y-3 sm:hidden">
+            {filteredStudents.map((student) => (
+              <div
+                key={student.id}
+                className={`rounded-xl border p-3 shadow-sm ${
+                  student.sponsorship_source === 'mp' ? 'border-yellow-200 bg-yellow-50/40' : 'border-gray-200 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-gray-900 truncate">{student.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{student.admissionNumber || student.registration_no}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+                    student.status === 'approved' || student.status === 'disbursed' ? 'bg-green-100 text-green-800' :
+                    student.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                  </span>
+                </div>
+
+                <div className="mt-3 space-y-1.5 text-xs text-gray-700">
+                  <p><span className="font-medium text-gray-900">Institution:</span> {student.institution}</p>
+                  <p><span className="font-medium text-gray-900">Ward:</span> {student.ward_name || student.ward}</p>
+                  <p><span className="font-medium text-gray-900">Allocation:</span> {formatCurrency(student.total_allocation || student.amount)}</p>
+                </div>
+
+                <div className="mt-3 flex items-center justify-end gap-2">
+                  <button onClick={() => handleView(student)} className="p-2 rounded-lg bg-blue-50 text-blue-700" title="View">
+                    <Eye size={16} />
+                  </button>
+                  <button onClick={() => handleEdit(student)} className="p-2 rounded-lg bg-green-50 text-green-700" title="Edit">
+                    <Edit size={16} />
+                  </button>
+                  <button onClick={() => handleDelete(student.id)} className="p-2 rounded-lg bg-red-50 text-red-700" title="Delete">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+
+          {viewMode === 'grid' ? (
+            <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStudents.map((student) => (
+                <StudentCard 
+                  key={student.id} 
+                  student={student} 
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onView={handleView}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  userRole={user.role}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="hidden sm:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                            checked={selectedStudents.size === filteredStudents.length && filteredStudents.length > 0}
+                            onChange={handleSelectAll}
+                          />
+                          Student
+                        </div>
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution & Course</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ward</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sponsor</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocation</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredStudents.map((student) => (
+                      <tr key={student.id} className={`hover:bg-gray-50 ${student.sponsorship_source === 'mp' ? 'bg-yellow-50/50' : ''} ${selectedStudents.has(student.id) ? 'bg-blue-50/50' : ''}`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-4"
+                              checked={selectedStudents.has(student.id)}
+                              onChange={() => handleSelect(student.id)}
+                            />
+                            <div className={`h-10 w-10 ${student.sponsorship_source === 'mp' ? 'bg-yellow-100' : student.sponsorship_source === 'other' ? 'bg-purple-100' : 'bg-blue-100'} rounded-full flex items-center justify-center`}>
+                              {student.sponsorship_source === 'mp' ? (
+                                <Crown size={16} className="text-yellow-600" />
+                              ) : student.sponsorship_source === 'other' ? (
+                                <UserCheck size={16} className="text-purple-600" />
+                              ) : (
+                                <Users size={16} className="text-blue-600" />
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <div className="flex items-center space-x-2">
+                                <div className="text-sm font-medium text-gray-900">{student.name}</div>
+                                {student.sponsorship_source === 'mp' && (
+                                  <Crown size={12} className="text-yellow-500" />
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-500">{student.admissionNumber || student.registration_no}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{student.institution}</div>
+                          <div className="text-sm text-gray-500">
+                            {student.education_level === 'high_school' ? 'High School' :
+                             student.education_level === 'college' ? 'College' :
+                             student.education_level === 'university' ? 'University' : ''}
+                            {student.course ? ` • ${student.course}` : ''}
+                            {student.year ? ` • ${student.year}` : ''}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center text-sm text-gray-900">
+                            <Building size={14} className="mr-1 text-gray-400" />
+                            {student.ward_name || student.ward}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {getApplicationYear(student)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            student.sponsorship_source === 'mp' 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : student.sponsorship_source === 'cdf'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {student.sponsorship_source === 'mp' ? 'MP' : 
+                             student.sponsorship_source === 'cdf' ? 'CDF' : 'Other'}
+                          </span>
+                          {student.sponsor_name && (
+                            <div className="text-xs text-gray-500 mt-1">{student.sponsor_name}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            student.status === 'approved' || student.status === 'disbursed' ? 'bg-green-100 text-green-800' :
+                            student.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <div>
+                            <div className="font-bold">{formatCurrency(student.total_allocation || student.amount)}</div>
+                            {student.sponsorship_amount && student.sponsorship_amount > 0 && (
+                              <div className="text-xs text-gray-600">
+                                CDF: {formatCurrency(student.amount)}
+                                {student.sponsorship_source === 'mp' ? (
+                                  <span className="text-yellow-600 ml-2">MP: {formatCurrency(student.sponsorship_amount)}</span>
+                                ) : (
+                                  <span className="text-purple-600 ml-2">Sponsor: {formatCurrency(student.sponsorship_amount)}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <button 
+                              onClick={() => handleView(student)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleEdit(student)}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            {(isAdmin || isCommittee || user.role === 'admin' || user.role === 'committee') && student.status === 'pending' && (
+                              <>
+                                <button 
+                                  onClick={() => handleApprove(student.id)}
+                                  className="text-green-600 hover:text-green-900"
+                                  title="Approve"
+                                >
+                                  <CheckCircle size={18} />
+                                </button>
+                                <button 
+                                  onClick={() => handleReject(student.id)}
+                                  className="text-red-600 hover:text-red-900"
+                                  title="Reject"
+                                >
+                                  <XCircle size={18} />
+                                </button>
+                              </>
+                            )}
+                            <button 
+                              onClick={() => handleDelete(student.id)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* No students found */}

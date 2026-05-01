@@ -103,14 +103,14 @@ const StatCard: React.FC<{
   color: string;
   iconBg: string;
 }> = ({ title, value, subtitle, icon, color, iconBg }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between">
       <div className="flex-1 min-w-0">
         <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
-        <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2 truncate">{value}</p>
+        <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1.5 truncate">{value}</p>
         <p className="text-[10px] sm:text-sm text-gray-500 mt-1 truncate">{subtitle}</p>
       </div>
-      <div className={`p-2 sm:p-3 rounded-lg ${iconBg} flex-shrink-0 ml-2`}>
+      <div className={`p-2 rounded-lg ${iconBg} flex-shrink-0 ml-2`}>
         {React.cloneElement(icon as React.ReactElement, { className: `w-5 h-5 sm:w-6 sm:h-6 ${color}` })}
       </div>
     </div>
@@ -121,19 +121,19 @@ const SMSCard: React.FC<{
   balance: string;
   provider: string;
 }> = ({ balance, provider }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between">
       <div className="flex-1 min-w-0">
         <div className="flex items-center">
           <Send className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mr-2 flex-shrink-0" />
           <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">SMS Balance</p>
         </div>
-        <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2 truncate">{balance}</p>
+        <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1.5 truncate">{balance}</p>
         <p className="text-[10px] sm:text-sm text-gray-500 mt-1 truncate">
           Provider: <span className="font-medium">{provider}</span>
         </p>
       </div>
-      <div className="p-2 sm:p-3 rounded-lg bg-blue-100 flex-shrink-0 ml-2">
+      <div className="p-2 rounded-lg bg-blue-100 flex-shrink-0 ml-2">
         <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
       </div>
     </div>
@@ -152,6 +152,8 @@ const StudentRow: React.FC<{
   onSendSMS: (id: number) => void;
   userRole: string;
 }> = ({ student, isSelected, onSelect, onEdit, onDelete, onView, onApprove, onReject, onSendSMS, userRole }) => {
+  const studentDisplayName = student.name?.trim() || student.registration_no || `Student #${student.id}`;
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -225,7 +227,7 @@ const StudentRow: React.FC<{
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900 truncate">{student.name}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{studentDisplayName}</p>
                 <p className="text-xs text-gray-500 truncate">{student.registration_no}</p>
               </div>
             </div>
@@ -253,7 +255,7 @@ const StudentRow: React.FC<{
           </div>
         </div>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-4 sm:px-6 py-4 min-w-[170px]">
         <div className="text-sm text-gray-900 font-medium">{student.institution}</div>
         <div className="text-sm text-gray-600 mt-1">
           {student.education_level === 'high_school' ? 'High School' :
@@ -299,8 +301,8 @@ const StudentRow: React.FC<{
           )}
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(student.status)}`}>
+      <td className="px-4 sm:px-6 py-4 min-w-[120px]">
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium border ${getStatusColor(student.status)}`}>
           {getStatusText(student.status)}
         </span>
       </td>
@@ -1058,21 +1060,21 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-5 p-3 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Student Allocations</h1>
           <p className="text-gray-600 mt-2">Manage and track Chepalungu CDF and MP-sponsored student bursary allocations</p>
         </div>
-        <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+        <div className="grid w-full md:w-auto grid-cols-2 gap-2.5 sm:gap-3 mt-3 md:mt-0 max-[400px]:grid-cols-1">
           <button
             onClick={() => {
               fetchStudents();
               fetchSmsBalance();
             }}
             disabled={loading}
-            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
           >
             <RefreshCw size={18} className="mr-2" />
             Refresh
@@ -1080,7 +1082,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
           <button 
             onClick={handleExportData}
             disabled={loading || filteredStudents.length === 0}
-            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
           >
             <Download size={18} className="mr-2" />
             Export
@@ -1088,7 +1090,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
           <button
             onClick={handleApproveAllPending}
             disabled={loading || filteredStudents.filter(s => s.status === 'pending').length === 0}
-            className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
           >
             <CheckCircle size={18} className="mr-2" />
             Approve All Pending
@@ -1096,14 +1098,14 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
           <button
             onClick={handleSendAllSMS}
             disabled={loading || filteredStudents.filter(s => (s.status === 'approved' || s.status === 'disbursed') && s.sms_status !== 'sent').length === 0}
-            className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 text-xs sm:text-sm"
           >
             <Send size={18} className="mr-2" />
             Send All SMS
           </button>
           <button 
             onClick={() => setShowForm(true)}
-            className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm"
           >
             <UserPlus size={18} className="mr-2" />
             Add Student
@@ -1112,7 +1114,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {studentStats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
@@ -1120,7 +1122,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
@@ -1224,13 +1226,13 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-[780px] w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Details</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Education</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SMS</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
