@@ -165,90 +165,93 @@ const Applications: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Applications Management</h1>
-          <p className="text-gray-600 mt-2">Review and process Chepalungu CDF applications</p>
+    <div className="w-full max-w-full overflow-x-hidden">
+      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Applications Management</h1>
+            <p className="text-gray-600 mt-2">Review and process Chepalungu CDF applications</p>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3 w-full">
           <button
             onClick={fetchApplications}
             disabled={loading}
-            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm font-medium whitespace-nowrap"
           >
-            <RefreshCw size={18} className="mr-2" />
-            Refresh
+            <RefreshCw size={18} className="mr-2 flex-shrink-0" />
+            <span>Refresh</span>
           </button>
           <button 
             onClick={() => {/* Navigate to new application form */}}
-            className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap"
           >
-            <UserPlus size={18} className="mr-2" />
-            New Application
+            <UserPlus size={18} className="mr-2 flex-shrink-0" />
+            <span>New Application</span>
           </button>
           <button 
             onClick={() => {/* Export functionality */}}
-            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium whitespace-nowrap"
           >
-            <Download size={18} className="mr-2" />
-            Export
+            <Download size={18} className="mr-2 flex-shrink-0" />
+            <span>Export</span>
           </button>
         </div>
-      </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Total</p>
-          <p className="text-xl font-bold text-gray-900">{stats.total}</p>
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 relative z-10">
+          <p className="text-xs sm:text-sm text-gray-600">Total</p>
+          <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Pending</p>
-          <p className="text-xl font-bold text-yellow-600">{stats.pending}</p>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 relative z-10">
+          <p className="text-xs sm:text-sm text-gray-600">Pending</p>
+          <p className="text-lg sm:text-xl font-bold text-yellow-600 mt-1">{stats.pending}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Reviewing</p>
-          <p className="text-xl font-bold text-blue-600">{stats.reviewing}</p>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 relative z-10">
+          <p className="text-xs sm:text-sm text-gray-600">Reviewing</p>
+          <p className="text-lg sm:text-xl font-bold text-blue-600 mt-1">{stats.reviewing}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Approved</p>
-          <p className="text-xl font-bold text-green-600">{stats.approved}</p>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 relative z-10">
+          <p className="text-xs sm:text-sm text-gray-600">Approved</p>
+          <p className="text-lg sm:text-xl font-bold text-green-600 mt-1">{stats.approved}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Rejected</p>
-          <p className="text-xl font-bold text-red-600">{stats.rejected}</p>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 relative z-10">
+          <p className="text-xs sm:text-sm text-gray-600">Rejected</p>
+          <p className="text-lg sm:text-xl font-bold text-red-600 mt-1">{stats.rejected}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Total Requested</p>
-          <p className="text-lg font-bold text-gray-900">{formatCurrency(stats.totalRequested)}</p>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 relative z-10">
+          <p className="text-xs sm:text-sm text-gray-600">Total Requested</p>
+          <p className="text-base sm:text-lg font-bold text-gray-900 mt-1 truncate">{formatCurrency(stats.totalRequested)}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div className="w-full bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm relative z-10">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full lg:max-w-md min-w-0">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400" />
+              <Search size={18} className="text-gray-400 flex-shrink-0" />
             </div>
             <input
               type="search"
-              placeholder="Search applications by name, ID, or description..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Search applications..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-3">
             <div className="flex items-center space-x-2">
-              <Filter size={18} className="text-gray-500" />
+              <Filter size={18} className="text-gray-500 flex-shrink-0 hidden sm:block" />
               <select
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
@@ -260,7 +263,7 @@ const Applications: React.FC = () => {
             </div>
 
             <select
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
             >
@@ -271,7 +274,7 @@ const Applications: React.FC = () => {
             </select>
 
             <select
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               value={selectedWard}
               onChange={(e) => setSelectedWard(e.target.value)}
             >

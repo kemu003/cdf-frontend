@@ -1109,41 +1109,42 @@ export default function Students() {
   }
 
   return (
-    <div className="space-y-4 p-3 sm:p-6 pt-20 sm:pt-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Student Management</h1>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">Manage and track all Chepalungu CDF and MP-sponsored student beneficiaries</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <div className="flex gap-2 w-full sm:w-auto">
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="flex-1 sm:flex-none flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              <RefreshCw size={16} className="mr-2" />
-              Refresh
-            </button>
-            <button 
-              onClick={handleExportData}
-              disabled={loading || filteredStudents.length === 0}
-              className="flex-1 sm:flex-none flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              <FileSpreadsheet size={16} className="mr-2" />
-              Export
-            </button>
+    <div className="w-full max-w-full overflow-x-hidden">
+      <div className="space-y-4 p-4 sm:p-6 lg:p-8">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Student Management</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage and track all Chepalungu CDF and MP-sponsored student beneficiaries</p>
           </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3 w-full">
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm font-medium whitespace-nowrap"
+          >
+            <RefreshCw size={18} className="mr-2 flex-shrink-0" />
+            <span>Refresh</span>
+          </button>
+          <button 
+            onClick={handleExportData}
+            disabled={loading || filteredStudents.length === 0}
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm font-medium whitespace-nowrap"
+          >
+            <FileSpreadsheet size={18} className="mr-2 flex-shrink-0" />
+            <span>Export</span>
+          </button>
           <button 
             onClick={() => setShowForm(true)}
-            className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm shadow-sm"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap shadow-sm"
           >
-            <UserPlus size={16} className="mr-2" />
-            Add New Student
+            <UserPlus size={18} className="mr-2 flex-shrink-0" />
+            <span>Add New Student</span>
           </button>
         </div>
-      </div>
 
       {/* Bulk Actions Bar */}
       {selectedStudents.size > 0 && (
@@ -1282,19 +1283,19 @@ export default function Students() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {studentStats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
       </div>
 
       {/* Controls */}
-      <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm">
+      <div className="w-full bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Search */}
-          <div className="relative flex-1 w-full lg:max-w-md">
+          <div className="relative flex-1 w-full lg:max-w-md min-w-0">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400" />
+              <Search size={18} className="text-gray-400 flex-shrink-0" />
             </div>
             <input
               type="search"
@@ -1306,11 +1307,11 @@ export default function Students() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="flex items-center space-x-2 flex-1 min-w-[140px] sm:flex-none">
-              <Filter size={16} className="text-gray-500 hidden sm:block" />
+          <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <Filter size={18} className="text-gray-500 flex-shrink-0 hidden sm:block" />
               <select
-                className="w-full border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
@@ -1322,7 +1323,7 @@ export default function Students() {
             </div>
 
             <select 
-              className="flex-1 min-w-[120px] sm:flex-none border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               value={selectedWard}
               onChange={(e) => setSelectedWard(e.target.value)}
             >
@@ -1335,7 +1336,7 @@ export default function Students() {
             <select
               value={filterEducationLevel}
               onChange={(e) => setFilterEducationLevel(e.target.value)}
-              className="flex-1 min-w-[140px] sm:flex-none border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             >
               <option value="all">All Levels</option>
               {educationLevels.map(level => (
@@ -1347,7 +1348,7 @@ export default function Students() {
             <select
               value={selectedSponsorshipSource}
               onChange={(e) => setSelectedSponsorshipSource(e.target.value)}
-              className="flex-1 min-w-[130px] sm:flex-none border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             >
               <option value="all">All Sponsors</option>
               {sponsorshipSources.map(sponsor => (

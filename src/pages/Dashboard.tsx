@@ -26,23 +26,23 @@ const StatCard: React.FC<{
   icon: React.ReactNode;
   color: string;
 }> = ({ title, value, change, isPositive, icon, color }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
-    <div className="flex items-center justify-between">
+  <div className="w-full bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative z-10">
+    <div className="flex items-center justify-between gap-3">
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-gray-600 truncate">{title}</p>
         <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2 truncate">{value}</p>
         <div className="flex items-center mt-2">
           {isPositive ? (
-            <ArrowUp size={14} className="text-green-500" />
+            <ArrowUp size={14} className="text-green-500 flex-shrink-0" />
           ) : (
-            <ArrowDown size={14} className="text-red-500" />
+            <ArrowDown size={14} className="text-red-500 flex-shrink-0" />
           )}
           <span className={`text-xs sm:text-sm font-medium ml-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
             {change}
           </span>
         </div>
       </div>
-      <div className={`p-2 sm:p-3 rounded-lg ${color} flex-shrink-0 ml-2`}>
+      <div className={`p-2 sm:p-3 rounded-lg ${color} flex-shrink-0`}>
         {icon}
       </div>
     </div>
@@ -115,76 +115,81 @@ const Dashboard: React.FC = () => {
   if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-lg">
-        <h1 className="text-lg sm:text-2xl font-bold leading-tight">Chepalungu CDF: Streamlining Constituency Development Funds for a better and brighter future</h1>
-        <p className="text-blue-100 mt-2 text-sm sm:text-base">Financial Overview & Bursary Management</p>
-      </div>
+    <div className="w-full max-w-full overflow-x-hidden">
+      <div className="space-y-6">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-lg relative z-10">
+          <h1 className="text-2xl sm:text-3xl font-bold leading-tight">Chepalungu CDF: Streamlining Constituency Development Funds for a better and brighter future</h1>
+          <p className="text-blue-100 mt-2 text-sm sm:text-base">Financial Overview & Bursary Management</p>
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {stats.map((stat, index) => (
-          <StatCard key={index} {...stat} />
-        ))}
-      </div>
+        {/* Stats Grid */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {stats.map((stat, index) => (
+            <StatCard key={index} {...stat} />
+          ))}
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Financial Overview - Ward Distribution */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Ward Fund Distribution</h2>
-            <BarChart3 className="text-gray-400" size={20} />
-          </div>
-          <div className="space-y-5">
-            {budgetOverview?.wards.map((ward: any) => (
-              <div key={ward.id}>
-                <div className="flex flex-col sm:flex-row sm:justify-between text-sm mb-2 gap-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-gray-700">{ward.name}</span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
-                      {ward.student_count || 0} students
-                    </span>
+        {/* Main Content Grid */}
+        <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Financial Overview - Ward Distribution */}
+          <div className="lg:col-span-2 w-full bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Ward Fund Distribution</h2>
+              <BarChart3 className="text-gray-400" size={20} />
+            </div>
+            <div className="w-full overflow-x-auto">
+              <div className="space-y-5 min-w-full">
+                {budgetOverview?.wards.map((ward: any) => (
+                  <div key={ward.id}>
+                    <div className="flex flex-col sm:flex-row sm:justify-between text-sm mb-2 gap-1">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <span className="font-semibold text-gray-700 truncate">{ward.name}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800 flex-shrink-0">
+                          {ward.student_count || 0} students
+                        </span>
+                      </div>
+                      <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">
+                        KES {ward.remaining_balance.toLocaleString()} / {ward.total_allocated.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-700" 
+                        style={{ width: `${(ward.remaining_balance / ward.total_allocated) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <span className="text-gray-500 text-xs sm:text-sm">
-                    KES {ward.remaining_balance.toLocaleString()} / {ward.total_allocated.toLocaleString()}
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Global Budget Breakdown */}
+          <div className="w-full bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm relative z-10">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Global Budget 2026</h2>
+            <div className="space-y-6">
+              <div className="p-4 bg-blue-50 rounded-xl">
+                <p className="text-xs text-blue-600 font-medium uppercase tracking-wider">Total Allocated</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-900 mt-1 truncate">KES {budgetOverview?.total_budget.toLocaleString()}</p>
+              </div>
+              <div className="p-4 bg-green-50 rounded-xl">
+                <p className="text-xs text-green-600 font-medium uppercase tracking-wider">Currently Remaining</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-900 mt-1 truncate">KES {budgetOverview?.remaining_budget.toLocaleString()}</p>
+              </div>
+              <div className="pt-4 border-t">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600">Utilization Rate</span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {(((budgetOverview?.total_budget - budgetOverview?.remaining_budget) / budgetOverview?.total_budget) * 100).toFixed(1)}%
                   </span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-700" 
-                    style={{ width: `${(ward.remaining_balance / ward.total_allocated) * 100}%` }}
+                    className="bg-purple-600 h-2 rounded-full transition-all duration-700" 
+                    style={{ width: `${((budgetOverview?.total_budget - budgetOverview?.remaining_budget) / budgetOverview?.total_budget) * 100}%` }}
                   ></div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Global Budget Breakdown */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Global Budget 2026</h2>
-          <div className="space-y-6">
-            <div className="p-4 bg-blue-50 rounded-xl">
-              <p className="text-xs text-blue-600 font-medium uppercase tracking-wider">Total Allocated</p>
-              <p className="text-xl sm:text-2xl font-bold text-blue-900 mt-1">KES {budgetOverview?.total_budget.toLocaleString()}</p>
-            </div>
-            <div className="p-4 bg-green-50 rounded-xl">
-              <p className="text-xs text-green-600 font-medium uppercase tracking-wider">Currently Remaining</p>
-              <p className="text-xl sm:text-2xl font-bold text-green-900 mt-1">KES {budgetOverview?.remaining_budget.toLocaleString()}</p>
-            </div>
-            <div className="pt-4 border-t">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">Utilization Rate</span>
-                <span className="text-sm font-bold text-gray-900">
-                  {(((budgetOverview?.total_budget - budgetOverview?.remaining_budget) / budgetOverview?.total_budget) * 100).toFixed(1)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div 
-                  className="bg-purple-600 h-2 rounded-full transition-all duration-700" 
-                  style={{ width: `${((budgetOverview?.total_budget - budgetOverview?.remaining_budget) / budgetOverview?.total_budget) * 100}%` }}
-                ></div>
               </div>
             </div>
           </div>

@@ -10,11 +10,7 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  Clock,
-  GraduationCap,
   Building,
-  Award,
-  Mail,
   ArrowUp,
   ArrowDown,
   TrendingUp,
@@ -23,19 +19,13 @@ import {
   X,
   RefreshCw,
   FileText,
-  Calendar,
   BarChart3,
-  Layers,
-  UserCheck,
-  Target,
+  User,
   Crown,
-  AlertCircle,
-  FileSpreadsheet,
   CheckSquare,
   Square,
   Send,
-  Phone,
-  User
+  Phone
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { api, studentsAPI } from '../services/api';
@@ -43,6 +33,8 @@ import { api, studentsAPI } from '../services/api';
 interface Student {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
   admissionNumber: string;
   institution: string;
   course: string;
@@ -70,12 +62,6 @@ interface Student {
   total_allocation?: number;
 }
 
-interface MPSponsorshipSummary {
-  totalMpSponsored: number;
-  totalMpAmount: number;
-  mpStudentsByWard: Record<string, number>;
-}
-
 interface SMSResponse {
   success: boolean;
   success_count: number;
@@ -99,19 +85,19 @@ const StatCard: React.FC<{
   title: string;
   value: string;
   subtitle: string;
-  icon: React.ReactNode;
+  icon: React.ReactElement;
   color: string;
   iconBg: string;
 }> = ({ title, value, subtitle, icon, color, iconBg }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between">
+  <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between gap-3">
       <div className="flex-1 min-w-0">
         <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
-        <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1.5 truncate">{value}</p>
+        <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1 truncate">{value}</p>
         <p className="text-[10px] sm:text-sm text-gray-500 mt-1 truncate">{subtitle}</p>
       </div>
-      <div className={`p-2 rounded-lg ${iconBg} flex-shrink-0 ml-2`}>
-        {React.cloneElement(icon as React.ReactElement, { className: `w-5 h-5 sm:w-6 sm:h-6 ${color}` })}
+      <div className={`p-2 rounded-lg ${iconBg} flex-shrink-0`}>
+        {React.cloneElement(icon, { className: `w-5 h-5 sm:w-6 sm:h-6 ${color}` })}
       </div>
     </div>
   </div>
@@ -121,19 +107,19 @@ const SMSCard: React.FC<{
   balance: string;
   provider: string;
 }> = ({ balance, provider }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between">
+  <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center">
           <Send className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mr-2 flex-shrink-0" />
           <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">SMS Balance</p>
         </div>
-        <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1.5 truncate">{balance}</p>
+        <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1 truncate">{balance}</p>
         <p className="text-[10px] sm:text-sm text-gray-500 mt-1 truncate">
           Provider: <span className="font-medium">{provider}</span>
         </p>
       </div>
-      <div className="p-2 rounded-lg bg-blue-100 flex-shrink-0 ml-2">
+      <div className="p-2 rounded-lg bg-blue-100 flex-shrink-0">
         <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
       </div>
     </div>
@@ -202,8 +188,9 @@ const StudentRow: React.FC<{
   const totalAllocation = student.total_allocation || student.amount + (student.sponsorship_amount || 0);
 
   return (
-    <tr className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''} ${isMPSponsored ? 'bg-yellow-50/30' : ''}`}>
-      <td className="px-6 py-4 whitespace-nowrap">
+    <>
+      <tr className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''} ${isMPSponsored ? 'bg-yellow-50/30' : ''}`}>
+        <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <button
             onClick={() => onSelect(student.id)}
@@ -362,6 +349,120 @@ const StudentRow: React.FC<{
         </div>
       </td>
     </tr>
+  </>
+  );
+};
+
+const StudentCard: React.FC<{
+  student: Student;
+  onEdit: (student: Student) => void;
+  onDelete: (id: number) => void;
+  onView: (student: Student) => void;
+  onApprove: (id: number) => void;
+  onReject: (id: number) => void;
+  onSendSMS: (id: number) => void;
+  userRole: string;
+}> = ({ student, onEdit, onDelete, onView, onApprove, onReject, onSendSMS, userRole }) => {
+  const studentDisplayName = student.name?.trim() || student.registration_no || `Student #${student.id}`;
+  const totalAllocation = student.total_allocation || student.amount + (student.sponsorship_amount || 0);
+
+  const getSMSStatusColor = (status: string) => {
+    switch (status) {
+      case 'sent': return 'text-green-600 bg-green-50 border-green-200';
+      case 'failed': return 'text-red-600 bg-red-50 border-red-200';
+      case 'partial': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getSMSStatusText = (status: string) => {
+    switch (status) {
+      case 'sent': return 'sent';
+      case 'failed': return 'failed';
+      case 'partial': return 'partial';
+      default: return 'not sent';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'disbursed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'approved': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'disbursed': return 'Disbursed';
+      case 'approved': return 'Approved';
+      case 'pending': return 'Pending';
+      case 'rejected': return 'Rejected';
+      default: return status;
+    }
+  };
+
+  return (
+    <div className="md:hidden bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{studentDisplayName}</p>
+          <p className="text-xs text-gray-500 truncate">{student.registration_no}</p>
+        </div>
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium border ${getStatusColor(student.status)}`}>
+          {getStatusText(student.status)}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 text-sm text-gray-700">
+        <div>
+          <span className="font-medium">Institution:</span> {student.institution}
+        </div>
+        <div>
+          <span className="font-medium">Education:</span> {student.education_level === 'high_school' ? 'High School' : student.education_level === 'college' ? 'College' : student.education_level === 'university' ? 'University' : 'N/A'} {student.year ? `• ${student.year}` : ''}
+        </div>
+        <div>
+          <span className="font-medium">Amount:</span> {new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', minimumFractionDigits: 0 }).format(totalAllocation)}
+        </div>
+        <div>
+          <span className="font-medium">SMS Status:</span>
+          <span className={`inline-flex items-center ml-2 px-2 py-1 rounded-full text-xs font-medium border ${getSMSStatusColor(student.sms_status)}`}>
+            {getSMSStatusText(student.sms_status)}
+          </span>
+        </div>
+        <div>
+          <span className="font-medium">Contacts:</span> {student.phone ? `S: ${student.phone}` : ''}{student.phone && student.guardian_phone ? ' | ' : ''}{student.guardian_phone ? `G: ${student.guardian_phone}` : ''}
+        </div>
+        <div>
+          <span className="font-medium">Ward:</span> {student.ward_name || student.ward}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => onView(student)} className="flex-1 min-w-[120px] inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100">
+            <Eye className="w-4 h-4 mr-2" /> View
+          </button>
+          <button onClick={() => onEdit(student)} className="flex-1 min-w-[120px] inline-flex items-center justify-center px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm hover:bg-green-100">
+            <Edit className="w-4 h-4 mr-2" /> Edit
+          </button>
+          {student.status === 'pending' && userRole === 'admin' && (
+            <>
+              <button onClick={() => onApprove(student.id)} className="flex-1 min-w-[120px] inline-flex items-center justify-center px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                <CheckCircle className="w-4 h-4 mr-2" /> Approve
+              </button>
+              <button onClick={() => onReject(student.id)} className="flex-1 min-w-[120px] inline-flex items-center justify-center px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">
+                <XCircle className="w-4 h-4 mr-2" /> Reject
+              </button>
+            </>
+          )}
+          <button onClick={() => onSendSMS(student.id)} className="flex-1 min-w-[120px] inline-flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
+            <Send className="w-4 h-4 mr-2" /> SMS
+          </button>
+          <button onClick={() => onDelete(student.id)} className="flex-1 min-w-[120px] inline-flex items-center justify-center px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100">
+            <Trash2 className="w-4 h-4 mr-2" /> Delete
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -381,11 +482,6 @@ export default function Students() {
   const [smsBalance, setSmsBalance] = useState<string>('Loading...');
   const [smsProvider, setSmsProvider] = useState<string>('Checking...');
   const [wardsList, setWardsList] = useState<any[]>([]);
-  const [mpSponsorshipSummary, setMpSponsorshipSummary] = useState<MPSponsorshipSummary>({
-    totalMpSponsored: 0,
-    totalMpAmount: 0,
-    mpStudentsByWard: {}
-  });
 
   const wards = ['Nyangores', 'Sigor', 'Chebunyo', 'Siongiroi', 'kongasis'];
   const currentYear = new Date().getFullYear().toString();
@@ -445,23 +541,7 @@ export default function Students() {
     return cleaned;
   };
 
-  const calculateMpSponsorshipSummary = (studentsData: Student[]) => {
-    const mpStudents = studentsData.filter(s => s.sponsorship_source === 'mp');
-    const totalMpSponsored = mpStudents.length;
-    const totalMpAmount = mpStudents.reduce((sum, s) => sum + (s.sponsorship_amount || 0), 0);
-    
-    const mpStudentsByWard: Record<string, number> = {};
-    
-    wards.forEach(ward => {
-      mpStudentsByWard[ward] = mpStudents.filter(s => (s.ward_name || s.ward) === ward).length;
-    });
-    
-    setMpSponsorshipSummary({
-      totalMpSponsored,
-      totalMpAmount,
-      mpStudentsByWard
-    });
-  };
+
 
   const fetchSmsBalance = async () => {
     try {
@@ -504,35 +584,43 @@ export default function Students() {
         studentArray = response.data.data;
       }
       
-      const formattedStudents: Student[] = studentArray.map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        admissionNumber: s.registration_no,
-        registration_no: s.registration_no,
-        institution: s.institution,
-        course: s.course || '',
-        ward: s.ward,
-        ward_name: s.ward_name || (typeof s.ward === 'string' ? s.ward : ''),
-        status: s.status === 'disbursed' ? 'disbursed' : s.status,
-        allocatedAmount: `Ksh ${parseFloat(s.amount || 0).toLocaleString()}`,
-        contact: s.phone || s.guardian_phone || '',
-        phone: s.phone,
-        guardian_phone: s.guardian_phone,
-        year: s.year,
-        date_applied: s.date_applied,
-        date_processed: s.date_processed,
-        education_level: s.education_level || 'high_school',
-        sms_status: s.sms_status || 'not_sent',
-        amount: parseFloat(s.amount || 0),
-        sponsorship_source: s.sponsorship_source || 'cdf',
-        sponsor_name: s.sponsor_name,
-        sponsorship_date: s.sponsorship_date,
-        sponsorship_amount: s.sponsorship_amount ? parseFloat(s.sponsorship_amount) : 0,
-        sponsor_details: s.sponsor_details,
-        rejection_reason: s.rejection_reason,
-        total_allocation: s.total_allocation ? parseFloat(s.total_allocation) : 
-          parseFloat(s.amount || 0) + (s.sponsorship_amount ? parseFloat(s.sponsorship_amount) : 0)
-      }));
+      const formattedStudents: Student[] = studentArray.map((s: any) => {
+        const firstName = (s.first_name || s.firstName || '').toString().trim();
+        const lastName = (s.last_name || s.lastName || '').toString().trim();
+        const computedName = s.name?.toString().trim() || `${firstName} ${lastName}`.trim();
+
+        return {
+          id: s.id,
+          name: computedName || s.registration_no || `Student #${s.id}`,
+          first_name: firstName,
+          last_name: lastName,
+          admissionNumber: s.registration_no,
+          registration_no: s.registration_no,
+          institution: s.institution || s.school || 'Unknown institution',
+          course: s.course || '',
+          ward: s.ward,
+          ward_name: s.ward_name || (typeof s.ward === 'string' ? s.ward : ''),
+          status: s.status === 'disbursed' ? 'disbursed' : s.status,
+          allocatedAmount: `Ksh ${parseFloat(s.amount || 0).toLocaleString()}`,
+          contact: s.phone || s.guardian_phone || '',
+          phone: s.phone,
+          guardian_phone: s.guardian_phone,
+          year: s.year,
+          date_applied: s.date_applied,
+          date_processed: s.date_processed,
+          education_level: s.education_level || 'high_school',
+          sms_status: s.sms_status || 'not_sent',
+          amount: parseFloat(s.amount || 0),
+          sponsorship_source: s.sponsorship_source || 'cdf',
+          sponsor_name: s.sponsor_name,
+          sponsorship_date: s.sponsorship_date,
+          sponsorship_amount: s.sponsorship_amount ? parseFloat(s.sponsorship_amount) : 0,
+          sponsor_details: s.sponsor_details,
+          rejection_reason: s.rejection_reason,
+          total_allocation: s.total_allocation ? parseFloat(s.total_allocation) : 
+            parseFloat(s.amount || 0) + (s.sponsorship_amount ? parseFloat(s.sponsorship_amount) : 0)
+        };
+      });
       
       // Filter to only current year students
       const currentYearStudents = formattedStudents.filter(student => {
@@ -543,7 +631,6 @@ export default function Students() {
       });
       
       setStudents(currentYearStudents);
-      calculateMpSponsorshipSummary(currentYearStudents);
       
     } catch (error: any) {
       console.error('Error fetching students:', error);
@@ -583,13 +670,13 @@ export default function Students() {
     setFormData({
       name: student.name,
       registration_no: student.registration_no,
-      national_id: (student as any).national_id || '',
+      national_id: student.national_id || '',
       phone: student.phone || '',
       guardian_phone: student.guardian_phone || '',
       institution: student.institution,
       course: student.course || '',
       year: student.year,
-      ward: student.ward,
+      ward: student.ward?.toString() || '',
       amount: student.amount.toString(),
       education_level: student.education_level || 'high_school',
       sponsorship_source: student.sponsorship_source || 'cdf',
@@ -673,7 +760,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
         s.id === studentId ? { 
           ...s, 
           sms_status: data.sms_status || 'sent',
-          status: data.student_status || s.status
+          status: ['pending', 'approved', 'rejected', 'disbursed'].includes(data.student_status || '') ? data.student_status as Student['status'] : s.status
         } : s
       ));
       
@@ -852,7 +939,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
     if (!window.confirm('Are you sure you want to approve this student?')) return;
     
     try {
-      const response = await api.put(`/students/${studentId}/approve/`);
+      await api.put(`/students/${studentId}/approve/`);
       setStudents(prev => prev.map(s =>
         s.id === studentId ? { 
           ...s, 
@@ -875,7 +962,7 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
     }
     
     try {
-      const response = await api.put(`/students/${studentId}/reject/`, { reason });
+      await api.put(`/students/${studentId}/reject/`, { reason });
       setStudents(prev => prev.map(s =>
         s.id === studentId ? { 
           ...s, 
@@ -997,7 +1084,6 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
   const averageAllocation = totalStudents > 0 ? totalAllocated / totalStudents : 0;
   
   // MP sponsored stats
-  const mpSponsoredStudents = filteredStudents.filter(s => s.sponsorship_source === 'mp').length;
   const mpSponsoredAmount = filteredStudents
     .filter(s => s.sponsorship_source === 'mp')
     .reduce((sum, s) => sum + (s.sponsorship_amount || 0), 0);
@@ -1060,106 +1146,107 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
   }
 
   return (
-    <div className="space-y-5 p-3 sm:p-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div className="w-full max-w-full overflow-x-hidden">
+      <div className="space-y-5 p-4 sm:p-6 lg:p-8">
+        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Student Allocations</h1>
           <p className="text-gray-600 mt-2">Manage and track Chepalungu CDF and MP-sponsored student bursary allocations</p>
         </div>
-        <div className="grid w-full md:w-auto grid-cols-2 gap-2.5 sm:gap-3 mt-3 md:mt-0 max-[400px]:grid-cols-1">
+
+        {/* Action Buttons - Stack on mobile, horizontal on desktop */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3 w-full">
           <button
             onClick={() => {
               fetchStudents();
               fetchSmsBalance();
             }}
             disabled={loading}
-            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm font-medium whitespace-nowrap"
           >
-            <RefreshCw size={18} className="mr-2" />
-            Refresh
+            <RefreshCw size={18} className="mr-2 flex-shrink-0" />
+            <span>Refresh</span>
           </button>
           <button 
             onClick={handleExportData}
             disabled={loading || filteredStudents.length === 0}
-            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm font-medium whitespace-nowrap"
           >
-            <Download size={18} className="mr-2" />
-            Export
+            <Download size={18} className="mr-2 flex-shrink-0" />
+            <span>Export</span>
           </button>
           <button
             onClick={handleApproveAllPending}
             disabled={loading || filteredStudents.filter(s => s.status === 'pending').length === 0}
-            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium whitespace-nowrap"
           >
-            <CheckCircle size={18} className="mr-2" />
-            Approve All Pending
+            <CheckCircle size={18} className="mr-2 flex-shrink-0" />
+            <span>Approve All Pending</span>
           </button>
           <button
             onClick={handleSendAllSMS}
             disabled={loading || filteredStudents.filter(s => (s.status === 'approved' || s.status === 'disbursed') && s.sms_status !== 'sent').length === 0}
-            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 text-xs sm:text-sm"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 text-sm font-medium whitespace-nowrap"
           >
-            <Send size={18} className="mr-2" />
-            Send All SMS
+            <Send size={18} className="mr-2 flex-shrink-0" />
+            <span>Send All SMS</span>
           </button>
           <button 
             onClick={() => setShowForm(true)}
-            className="w-full flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm"
+            className="w-full sm:flex-1 sm:min-w-max flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap"
           >
-            <UserPlus size={18} className="mr-2" />
-            Add Student
+            <UserPlus size={18} className="mr-2 flex-shrink-0" />
+            <span>Add Student</span>
           </button>
         </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {studentStats.map((stat, index) => (
-          <StatCard key={index} {...stat} />
-        ))}
-        <SMSCard balance={smsBalance} provider={smsProvider} />
-      </div>
+        {/* Stats Grid */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {studentStats.map((stat, index) => (
+            <StatCard key={index} {...stat} />
+          ))}
+          <SMSCard balance={smsBalance} provider={smsProvider} />
+        </div>
 
-      {/* Filters and Search */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400" />
+        {/* Filters and Search */}
+        <div className="w-full bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm overflow-x-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md min-w-0">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-gray-400 flex-shrink-0" />
+              </div>
+              <input
+                type="search"
+                placeholder="Search students..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <input
-              type="search"
-              placeholder="Search students..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <Filter size={18} className="text-gray-500" />
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-3">
+              <div className="flex items-center space-x-2">
+                <Filter size={18} className="text-gray-500 flex-shrink-0" />
+                <select
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="approved">Approved/Disbursed</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+
               <select
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
+                value={filterEducationLevel}
+                onChange={(e) => setFilterEducationLevel(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               >
-                <option value="all">All Status</option>
-                <option value="approved">Approved/Disbursed</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-
-            <select
-              value={filterEducationLevel}
-              onChange={(e) => setFilterEducationLevel(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Education Levels</option>
+                <option value="all">All Education Levels</option>
               {educationLevels.map(level => (
                 <option key={level.value} value={level.value}>{level.label}</option>
               ))}
@@ -1219,14 +1306,14 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
 
       {/* Student Table */}
       {loading ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+        <div className="w-full bg-white rounded-xl border border-gray-200 p-12 text-center">
           <Loader className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading students...</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-[780px] w-full divide-y divide-gray-200">
+        <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="w-full overflow-x-auto hidden md:block">
+            <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Details</th>
@@ -1255,6 +1342,21 @@ Processed: ${student.date_processed ? new Date(student.date_processed).toLocaleD
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="w-full space-y-3 md:hidden p-4">
+            {filteredStudents.map((student) => (
+              <StudentCard
+                key={student.id}
+                student={student}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onSendSMS={handleSendSMS}
+                userRole={user.role}
+              />
+            ))}
           </div>
         </div>
       )}

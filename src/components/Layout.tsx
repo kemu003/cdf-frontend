@@ -74,7 +74,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full bg-white">
       {/* Top Navigation */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8">
@@ -154,7 +154,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex h-full bg-white">
         {/* Sidebar - Desktop */}
         <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-64px)] sticky top-16">
           <nav className="p-4 space-y-1">
@@ -261,7 +261,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 w-full max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 py-6 lg:py-8 bg-white">
           {children}
         </main>
       </div>
